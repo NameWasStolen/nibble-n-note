@@ -1,0 +1,50 @@
+# Node / JS projects
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+*.env
+
+# Build / distribution folders
+dist/
+build/
+out/
+
+# Logs
+logs/
+*.log
+
+# OS / system files
+.DS_Store
+Thumbs.db
+
+# IDE / editor files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Images/uploads
+uploads/
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+# Android specific
+*.iml
+.gradle/
+local.properties
+build/
+captures/
+.externalNativeBuild/
+
+# Python (if you use any)
+__pycache__/
+*.pyc
+
+# macOS / Windows swap files
+*.swp
+*.lock
