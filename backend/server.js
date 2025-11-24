@@ -17,6 +17,10 @@ app.use(cors()); // Enabling CORS ONLY FOR DEVELOPMENT (remove after deployment)
 // TODO: Import Routers
 
 // TODO: Setting Routers
+// Test route
+app.get('/ping', (req, res) => 
+    res.send('Server received ping!')
+);
 
 // Preparing JSON catch-all for RESTful standards
 app.use((req, res) => {
