@@ -1,11 +1,13 @@
+require('dotenv').config();
+
 const mongoose = require('mongoose');
 
-const mongoURI = 'mongodb://localhost:27017/nibble_n_notes'; // Database name nibble_n_notes
+const mongoURI = process.env.DB_URL; // Database name
 
 async function connectToMongoDB() {
     try {
         await mongoose.connect(mongoURI);
-        console.log('Connected to MongoDB via Mongoose (nibble_n_notes)');
+        console.log('Connected to MongoDB via Mongoose');
     } catch (error) {
         console.error('MongoDB Connection Error: ', error);
         throw error;

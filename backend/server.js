@@ -2,9 +2,10 @@
 const express = require("express");
 const cors = require("cors"); // CORS ONLY FOR DEVELOPMENT (remove after deployment)
 const { connectToMongoDB } = require("./db/connection.js"); // Importing Mongoose connection
+require('dotenv').config();
 
 // Constants
-const PORT_NUMBER = 8080;
+const PORT_NUMBER = process.env.PORT || 5000;
 
 // Creating app
 const app = express();
