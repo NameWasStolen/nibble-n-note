@@ -6,6 +6,6 @@ const router = express.Router();
 
 // Setting routes
 // POST /auth/google
-router.post('/google', authController.googleAuth);
+router.post('/google', authController.googleLogin);
 
 module.exports = router;
