@@ -14,9 +14,17 @@ const app = express();
 app.use(express.json()); // Converts data to JSON in req.body
 app.use(cors()); // Enabling CORS ONLY FOR DEVELOPMENT (remove after deployment)
 
-// TODO: Import Routers
+// Import Routers
+const authRouter = require('./routes/authRouter.js');
+const userRouter = require('./routes/userRouter.js');
 
-// TODO: Setting Routers
+// Setting Routers
+// Authentication-related routes
+app.use('/api/auth', authRouter);
+
+// User-related routes
+app.use('/api/users', userRouter);
+
 // Test route
 app.get('/ping', (req, res) => 
     res.send('Server received ping!')
