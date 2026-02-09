@@ -15,8 +15,8 @@ app.use(express.json()); // Converts data to JSON in req.body
 app.use(cors()); // Enabling CORS ONLY FOR DEVELOPMENT (remove after deployment)
 
 // Import Routers
-const authRouter = require('./routes/auth_router.js');
-const userRouter = require('./routes/user_router.js');
+const authRouter = require('./routes/authRouter.js');
+const userRouter = require('./routes/userRouter.js');
 
 // Setting Routers
 // Authentication-related routes

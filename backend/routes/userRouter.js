@@ -1,10 +1,10 @@
 const express = require('express');
-const authController = require('../controllers/auth_controller.js');
+const userController = require('../controllers/userController.js');
 
 // Create router
 const router = express.Router();
 
 // Setting routes
-// TODO: Authentication + Login routes
+// TODO: User-related routes
 
 module.exports = router;
