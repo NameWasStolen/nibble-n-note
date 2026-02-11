@@ -35,7 +35,7 @@ const locationSchema = new mongoose.Schema({
             required: true 
         } // [lng, lat]
     }
-});
+}, {timestamps: true});
 
 // Index coordinates for geospatial queries (eg. nearby search)
 locationSchema.index({ coord: '2dsphere' });
