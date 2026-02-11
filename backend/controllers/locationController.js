@@ -14,27 +14,31 @@ module.exports = {
             // Convert lat/lng to GeoJSON format
             const coord = {
                 type: 'Point',
-                coordinates: [lng, lat] // [lng, lat] for GeoJSON
+                coordinates: [Number(lng), Number(lat)] // [lng, lat] for GeoJSON
             };
 
-            // Create new location document
-            const newLocation = new Location({
-                placeId,
+            // Create/update new location document
+            const location = await Location.findOneAndUpdate(
+                { placeId }, // filter
+                {
                 name,
                 address,
-                businessStatus: businessStatus || 'OPERATIONAL', // Default to OPERATIONAL if not provided
+                businessStatus: businessStatus || 'OPERATIONAL',
                 price,
                 coord
-            });
+                },
+                {
+                new: true,        // return updated document
+                upsert: true,     // create if doesn't exist
+                runValidators: true
+                }
+            );
 
-            // Save the new location to the database
-            const savedLocation = await newLocation.save();
-
-            res.status(201).json(savedLocation);
+            res.status(200).json(location);
 
         } catch (err) {
-            console.error('Error creating location:', err);
-            res.status(500).json({ error: 'Failed to create location', details: err.message });
+            console.error('Error creating/updating location:', err);
+            res.status(500).json({ error: 'Failed to create/update location', details: err.message });
         }
     }
 }
