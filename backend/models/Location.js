@@ -5,6 +5,7 @@ const locationSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
+        trim: true,
         index: true // Added for faster location queries
     },
     name: {
@@ -20,7 +21,7 @@ const locationSchema = new mongoose.Schema({
     businessStatus: {
         type: String,
         enum: ['OPERATIONAL', 'CLOSED_TEMPORARILY', 'CLOSED_PERMANENTLY'],
-        default: 'OPERATIONAL'
+        default: null
     },
     price:{
         type: Number,
