@@ -5,20 +5,23 @@ const locationSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
+        trim: true,
         index: true // Added for faster location queries
     },
     name: {
         type: String,
-        required: true
+        required: true,
+        trim: true
     },
     address: {
         type: String,
-        required: true
+        required: true,
+        trim: true
     },
     businessStatus: {
         type: String,
         enum: ['OPERATIONAL', 'CLOSED_TEMPORARILY', 'CLOSED_PERMANENTLY'],
-        default: 'OPERATIONAL'
+        default: null
     },
     price:{
         type: Number,
@@ -28,11 +31,32 @@ const locationSchema = new mongoose.Schema({
     coord: { // GeoJSON format (object with type, coordinates attributes)
         type: { 
             type: String, 
-            default: 'Point' 
+            enum: ['Point'],
+            default: 'Point', 
+            required: true
         },
         coordinates: { 
             type: [Number], 
-            required: true 
+            required: true,
+            validate: {
+                validator: function(value) {
+                    // Check value is array, and length 2
+                    if (!Array.isArray(value) || value.length !== 2) return false;
+
+                    const [lng, lat] = value;
+
+                    // Check lng + lat are numbers in valid ranges
+                    return (
+                        typeof lng === 'number' &&
+                        typeof lat === 'number' &&
+                        lng >= -180 &&
+                        lng <= 180 &&
+                        lat >= -90 &&
+                        lat <= 90
+                    );
+                },
+                message: 'Coordinates must be an array of two numbers [lng, lat]'
+            }
         } // [lng, lat]
     }
 }, {timestamps: true});

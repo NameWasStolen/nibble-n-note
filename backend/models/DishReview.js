@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const ratingSchema = require('./subschemas/ratingSchema');
 
-const restaurantReviewSchema = new mongoose.Schema(
+const dishReviewSchema = new mongoose.Schema(
     {
         locationId: {
             type: mongoose.Schema.Types.ObjectId,
@@ -22,6 +22,19 @@ const restaurantReviewSchema = new mongoose.Schema(
             type: ratingSchema,
             required: true
         },
+        dishName: {
+            type: String,
+            required: true,
+            trim: true,
+            maxlength: 100
+        },
+        normalisedDishName: {
+            type: String,
+            required: true,
+            trim: true,
+            lowercase: true,
+            maxlength: 100
+        },
         tagIds: {
             type: [
                 {
@@ -41,30 +54,34 @@ const restaurantReviewSchema = new mongoose.Schema(
 );
 
 // Mongoose middleware validator
-restaurantReviewSchema.pre('validate', function (next) {
+dishReviewSchema.pre('validate', function (next) {
     /* Ensure exactly one of userId or groupId is set */
     // Convert user + group vals into boolean
     const hasUser = !!this.userId;
     const hasGroup = !!this.groupId;
 
-    // Only ONE of userId or groupId should be set, to ensure distinction between personal and group restaurant reviews
+    // Only ONE of userId or groupId should be set, to ensure distinction between personal and group dish reviews
     if (hasUser === hasGroup) {
-        return next(new Error('RestaurantReview must belong to exactly one of userId or groupId'));
+        return next(new Error('DishReview must belong to exactly one of userId or groupId'));
+    }
+
+    if (this.dishName) {
+        this.normalisedDishName = this.dishName.trim().toLowerCase();
     }
 
     next();
 });
 
-// One personal restaurant review per user per location
-restaurantReviewSchema.index(
-    { userId: 1, locationId: 1 },
+// One personal dish review per user per location per dish name
+dishReviewSchema.index(
+    { userId: 1, locationId: 1, normalisedDishName: 1 },
     { unique: true, partialFilterExpression: { userId: { $type: 'objectId' } } } // Make sure index only applied to docs w/userId set (ensures null userId reviews not considered duplicates of each other)
 );
 
-// One group restaurant review per group per location
-restaurantReviewSchema.index(
-    { groupId: 1, locationId: 1 },
+// One group dish review per group per location per dish name
+dishReviewSchema.index(
+    { groupId: 1, locationId: 1, normalisedDishName: 1 },
     { unique: true, partialFilterExpression: { groupId: { $type: 'objectId' } } } // Make sure index only applied to docs w/groupId set
 );
 
-module.exports = mongoose.model('RestaurantReview', restaurantReviewSchema);
+module.exports = mongoose.model('DishReview', dishReviewSchema);
