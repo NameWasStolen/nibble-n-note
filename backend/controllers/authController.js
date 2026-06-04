@@ -40,7 +40,14 @@ module.exports = {
             );
 
             // Send JWT to client
-            res.json({ token });
+            res.json({ 
+                token,
+                user: {
+                    id: user._id,
+                    email: user.email,
+                    name: user.name
+                }
+            });
 
         } catch (err) {
             console.error(err);
