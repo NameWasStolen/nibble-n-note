@@ -27,7 +27,7 @@ app.use('/api/users', userRouter);
 
 // Test route
 app.get('/ping', (req, res) => 
-    res.send('Server received ping!')
+    res.send('pong')
 );
 
 // Preparing JSON catch-all for RESTful standards
