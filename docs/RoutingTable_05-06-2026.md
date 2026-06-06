@@ -27,11 +27,11 @@
 
 ---
 
-## Users
+## User
 
 | Method | Route | Auth | Purpose | Parameters | Success Response | Notes |
 |----------|----------|----------|----------|----------|----------|----------|
-| GET | `/api/users/me` | Yes | Get current authenticated user | None | `200 User` | Uses JWT identity |
+| GET | `/api/user/me` | Yes | Get current authenticated user | None | `200 User` | Uses JWT identity |
 
 ---
 

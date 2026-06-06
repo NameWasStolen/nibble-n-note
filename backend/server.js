@@ -23,7 +23,7 @@ const userRouter = require('./routes/userRouter.js');
 app.use('/api/auth', authRouter);
 
 // User-related routes
-app.use('/api/users', userRouter);
+app.use('/api/user', userRouter);
 
 // Test route
 app.get('/ping', (req, res) => 
