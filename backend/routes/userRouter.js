@@ -5,6 +5,7 @@ const userController = require('../controllers/userController.js');
 const router = express.Router();
 
 // Setting routes
-// TODO: User-related routes
+// GET /api/user/me
+router.get('/me', authMiddleware, userController.getCurrentUser);
 
 module.exports = router;
