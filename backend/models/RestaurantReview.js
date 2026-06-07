@@ -22,6 +22,21 @@ const restaurantReviewSchema = new mongoose.Schema(
             type: ratingSchema,
             required: true
         },
+        consensusSource: {
+            type: String,
+            enum: ['Entry Averages', 'Manual'],
+            default: 'Entry Averages',
+            required: true
+        },
+        consensusUpdatedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
+        },
+        consensusUpdatedAt: {
+            type: Date,
+            default: Date.now
+        },
         tagIds: {
             type: [
                 {
