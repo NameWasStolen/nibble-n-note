@@ -39,7 +39,7 @@
 
 | Method | Route | Auth | Purpose | Parameters | Success Response | Notes |
 |----------|----------|----------|----------|----------|----------|----------|
-| POST | `/api/locations` | Yes | Find or create location | `placeId, name, address, businessStatus, price, lat, lng` | `200/201 Location` | Uses `createOrUpdateLocation()` service |
+| POST | `/api/locations` | Yes | Find or create location | `placeId, name, address, businessStatus, price, lat, lng` | `200 Location` | Uses `createOrUpdateLocation()` service |
 | GET | `/api/locations/:id` | Yes | Get location by ID | `id` | `200 Location` | Useful for location details page |
 
 ---
