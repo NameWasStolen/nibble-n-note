@@ -18,6 +18,7 @@ app.use(cors()); // Enabling CORS ONLY FOR DEVELOPMENT (remove after deployment)
 const authRouter = require('./routes/authRouter.js');
 const userRouter = require('./routes/userRouter.js');
 const locationRouter = require('./routes/locationRoute.js');
+const restaurantReviewRouter = require('./routes/restaurantReviewRouter.js');
 
 // Setting Routers
 // Authentication-related routes
@@ -28,6 +29,9 @@ app.use('/api/user', userRouter);
 
 // Location-related routes
 app.use('/api/locations', locationRouter);
+
+// Restaurant Review-related routes
+app.use('/api/restaurant-reviews', restaurantReviewRouter);
 
 // Test route
 app.get('/ping', (req, res) => 
