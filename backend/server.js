@@ -27,7 +27,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/user', userRouter);
 
 // Location-related routes
-app.use('/api/location', locationRouter);
+app.use('/api/locations', locationRouter);
 
 // Test route
 app.get('/ping', (req, res) => 

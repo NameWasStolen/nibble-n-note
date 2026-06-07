@@ -6,7 +6,7 @@ const authMiddleware = require('../middleware/authMiddleware.js');
 const router = express.Router();
 
 // Setting routes
-// POST /api/location/
+// POST /api/locations/
 router.post('/', authMiddleware, locationController.findOrCreateLocation);
 
 module.exports = router;
