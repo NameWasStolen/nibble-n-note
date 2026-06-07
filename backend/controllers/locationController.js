@@ -1,5 +1,5 @@
 // Add Mongoose models + other imports here
-const Location = require('../models/locationModel.js');
+const Location = require('../models/Location');
 const { createOrUpdateLocation } = require('../services/locationService.js');
 
 module.exports = {
