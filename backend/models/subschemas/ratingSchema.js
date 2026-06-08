@@ -24,7 +24,7 @@ const ratingSchema = new mongoose.Schema(
             type: String,
             default: '',
             trim: true,
-            maxlength: 1000 // Reasonable max comment length
+            maxlength: 2000 // Reasonable max comment length
         }
     },
     { _id: false }
