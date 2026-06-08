@@ -8,8 +8,8 @@ async function createOrUpdateLocation({ placeId, name, address, businessStatus, 
 
   const location = await Location.findOneAndUpdate(
     { placeId }, // placeId is unique google places identifier
-    { name, address, businessStatus: businessStatus || null, price, coord },
-    { new: true, upsert: true, runValidators: true }
+    { name, address, businessStatus: businessStatus || null, price, coord }, // Fields to update
+    { returnDocument: 'after', upsert: true, runValidators: true } // Options for findOneAndUpdate
   );
 
   return location;

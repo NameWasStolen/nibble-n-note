@@ -1,4 +1,5 @@
 # API Routing Table
+Last Updated: 08/06/2026
 
 ## Notes
 
@@ -39,7 +40,7 @@
 
 | Method | Route | Auth | Purpose | Parameters | Success Response | Notes |
 |----------|----------|----------|----------|----------|----------|----------|
-| POST | `/api/locations` | Yes | Find or create location | `placeId, name, address, businessStatus, price, lat, lng` | `200/201 Location` | Uses `createOrUpdateLocation()` service |
+| POST | `/api/locations` | Yes | Find or create location | `placeId, name, address, businessStatus, price, lat, lng` | `200 Location` | Uses `createOrUpdateLocation()` service |
 | GET | `/api/locations/:id` | Yes | Get location by ID | `id` | `200 Location` | Useful for location details page |
 
 ---
@@ -48,9 +49,9 @@
 
 | Method | Route | Auth | Purpose | Parameters | Success Response | Notes |
 |----------|----------|----------|----------|----------|----------|----------|
-| POST | `/api/restaurant-reviews` | Yes | Create restaurant review container | `locationId, groupId?, consensusRating, tagIds?` | `201 RestaurantReview` | Personal if no groupId |
+| POST | `/api/restaurant-reviews` | Yes | Create restaurant review container | `locationId, groupId?, consensusRating, consensusSource, consensusUpdatedAt, consensusUpdatedBy, tagIds?` | `201 RestaurantReview` | Personal if no groupId |
 | GET | `/api/restaurant-reviews/:id` | Yes | Get restaurant review | `id` | `200 RestaurantReview` | Access control required |
-| PATCH | `/api/restaurant-reviews/:id` | Yes | Update review container | `consensusRating?, tagIds?` | `200 RestaurantReview` | Owner/Admin permissions |
+| PATCH | `/api/restaurant-reviews/:id` | Yes | Update review container | `consensusRating?, consensusSource, tagIds?` | `200 RestaurantReview` | Owner/Admin permissions |
 | DELETE | `/api/restaurant-reviews/:id` | Yes | Delete review container | `id` | `204 No Content` | Decide cascade delete behaviour |
 
 ---
