@@ -24,8 +24,8 @@ const restaurantReviewSchema = new mongoose.Schema(
         },
         consensusSource: {
             type: String,
-            enum: ['Entry Averages', 'Manual'],
-            default: 'Entry Averages',
+            enum: ['entry_average', 'manual'],
+            default: 'entry_average',
             required: true
         },
         consensusUpdatedBy: {
