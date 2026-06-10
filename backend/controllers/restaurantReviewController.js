@@ -72,7 +72,42 @@ module.exports = {
             session.endSession();
         }
     },
-    getRestaurantReviewById: async (req, res) => {},
+    /**
+     * getRestaurantReviewById
+     * Retrieves a restaurant review by its ID, including all related entries
+     */
+    getRestaurantReviewById: async (req, res) => {
+        try {
+            // Extract restaurantReviewId from req params
+            const { id } = req.params;
+
+            // Call service function to get restaurant review by ID, along with its entries
+            const result = await restaurantReviewService.getRestaurantReviewById({
+                restaurantReviewId: id,
+                userId: req.userId
+            });
+
+            return res.status(200).json(result);
+        } catch (err) {
+            // Log error for debugging
+            console.error(err);
+
+            // If error has statusCode, it's a custom error thrown in service layer (e.g. 404 not found, 403 forbidden, etc.)
+            if (err.statusCode) {
+                return res.status(err.statusCode).json({ error: err.message });
+            }
+
+            // Mongoose validation error (e.g. invalid restaurantReviewId format)
+            if (err.name === 'ValidationError') {
+                return res.status(400).json({ error: err.message });
+            }
+
+            // Catch-all for all other errors
+            return res.status(500).json({
+                error: 'Failed to get restaurant review'
+            });
+        }
+    },
     updateRestaurantReview: async (req, res) => {},
     deleteRestaurantReview: async (req, res) => {}
 }
