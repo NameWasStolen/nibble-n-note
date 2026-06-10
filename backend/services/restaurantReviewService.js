@@ -81,6 +81,55 @@ async function createRestaurantReviewWithFirstEntry({
     return { restaurantReview, restaurantReviewEntry };
 }
 
+/**
+ * getRestaurantReviewById
+ * Gets a restaurant review container by ID, along with its entries.
+ */
+async function getRestaurantReviewById({ restaurantReviewId, userId }) {
+    // Validate IDs
+    validateObjectId(restaurantReviewId, 'restaurantReviewId');
+    validateObjectId(userId, 'userId');
+
+    // Find restaurant review container
+    const restaurantReview = await RestaurantReview.findById(restaurantReviewId)
+        .populate('locationId', 'name address placeId price businessStatus coord')
+        .populate('tagIds', 'userId groupId name colour category');
+
+    // If not found, throw 404
+    if (!restaurantReview) {
+        const error = new Error('Restaurant review not found');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    // Access control: Check if user is owner or group member (if group review)
+    if (restaurantReview.groupId) {
+        await requireGroupMember({
+            groupId: restaurantReview.groupId,
+            userId
+        });
+    } else {
+        const isOwner = restaurantReview.userId.toString() === userId.toString();
+
+        if (!isOwner) {
+            const error = new Error('You do not have permission to view this restaurant review');
+            error.statusCode = 403;
+            throw error;
+        }
+    }
+
+    // Get entries for this restaurant review
+    const entries = await RestaurantReviewEntry.find({
+        restaurantReviewId: restaurantReview._id
+    }).populate('userId', 'name email');
+
+    return {
+        restaurantReview,
+        entries
+    };
+}
+
 module.exports = {
-    createRestaurantReviewWithFirstEntry
+    createRestaurantReviewWithFirstEntry,
+    getRestaurantReviewById
 };
