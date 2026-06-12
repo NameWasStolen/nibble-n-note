@@ -2,7 +2,11 @@ require('dotenv').config();
 
 const mongoose = require('mongoose');
 
-const mongoURI = process.env.DB_URL; // Database name
+const mongoURI = process.env.MONGO_URI; // Database name
+
+if (!mongoURI) {
+    throw new Error('MONGO_URI environment variable is not defined');
+}
 
 async function connectToMongoDB() {
     try {
