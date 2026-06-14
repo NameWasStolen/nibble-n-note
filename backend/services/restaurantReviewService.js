@@ -224,6 +224,83 @@ async function createRestaurantReviewEntry({
     };
 }
 
+/**
+ * updateRestaurantReviewEntry
+ * Updates a user's own restaurant review entry.
+ */
+async function updateRestaurantReviewEntry({
+    userId,
+    restaurantReviewEntryId,
+    userRating,
+    images,
+    session = null
+}) {
+    // Validate IDs
+    validateObjectId(userId, 'userId');
+    validateObjectId(restaurantReviewEntryId, 'restaurantReviewEntryId');
+
+    // Require at least one update field
+    if (userRating === undefined && images === undefined) {
+        throw createHttpError('At least one of userRating or images is required', 400);
+    }
+
+    // Validate optional update fields
+    if (userRating !== undefined) {
+        validateRatingInput(userRating);
+    }
+    if (images !== undefined) {
+        validateArray(images, 'images');
+    }
+
+    // Find entry
+    const restaurantReviewEntry = await RestaurantReviewEntry.findById(
+        restaurantReviewEntryId
+    ).session(session);
+    if (!restaurantReviewEntry) {
+        throw createHttpError('Restaurant review entry not found', 404);
+    }
+
+    // Users can only update their own entry
+    const isEntryOwner = restaurantReviewEntry.userId.toString() === userId.toString();
+    if (!isEntryOwner) {
+        throw createHttpError(
+            'You do not have permission to update this restaurant review entry',
+            403
+        );
+    }
+
+    // Find parent restaurant review container
+    const restaurantReview = await RestaurantReview.findById(
+        restaurantReviewEntry.restaurantReviewId
+    ).session(session);
+    if (!restaurantReview) {
+        throw createHttpError('Parent restaurant review not found', 404);
+    }
+
+    // Apply updates
+    if (userRating !== undefined) {
+        restaurantReviewEntry.userRating = userRating;
+    }
+    if (images !== undefined) {
+        restaurantReviewEntry.images = images;
+    }
+
+    // Save entry update
+    await restaurantReviewEntry.save({ session });
+
+    // Recalculate parent consensus rating if consensusSource is entry_average
+    const updatedRestaurantReview = await recalcRestaurantReviewConsensus({
+        restaurantReview,
+        updatedByUserId: userId,
+        session
+    });
+
+    return {
+        restaurantReview: updatedRestaurantReview,
+        restaurantReviewEntry
+    };
+}
+
 module.exports = {
     createRestaurantReviewWithFirstEntry,
     getRestaurantReviewById,
