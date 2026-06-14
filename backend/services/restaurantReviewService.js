@@ -164,8 +164,78 @@ async function recalcRestaurantReviewConsensus({ restaurantReview, updatedByUser
     return restaurantReview;
 }
 
+/**
+ * createRestaurantReviewEntry
+ * Adds a user's entry to an existing restaurant review container.
+ */
+async function createRestaurantReviewEntry({
+    userId,
+    restaurantReviewId,
+    userRating,
+    images = [],
+    session = null
+}) {
+    // Validate input types and shape
+    validateObjectId(userId, 'userId');
+    validateObjectId(restaurantReviewId, 'restaurantReviewId');
+    validateRatingInput(userRating);
+    validateArray(images, 'images');
+
+    // Find restaurant review container
+    const restaurantReview = await RestaurantReview.findById(restaurantReviewId).session(session);
+    if (!restaurantReview) {
+        const error = new Error('Restaurant review not found');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    // Access control: user must own personal review, or be member of group review
+    if (restaurantReview.groupId) {
+        await requireGroupMember({
+            groupId: restaurantReview.groupId,
+            userId,
+            session
+        });
+    } else {
+        const isOwner = restaurantReview.userId.toString() === userId.toString();
+
+        if (!isOwner) {
+            const error = new Error('You do not have permission to add an entry to this restaurant review');
+            error.statusCode = 403;
+            throw error;
+        }
+    }
+
+    // Create restaurant review entry
+    const restaurantReviewEntryDocs = await RestaurantReviewEntry.create(
+        [
+            {
+                restaurantReviewId,
+                userId,
+                userRating,
+                images
+            }
+        ],
+        { session }
+    );
+    const restaurantReviewEntry = restaurantReviewEntryDocs[0];
+
+    // Recalculate parent consensus rating
+    const updatedRestaurantReview = await recalcRestaurantReviewConsensus({
+        restaurantReview,
+        updatedByUserId: userId,
+        session
+    });
+
+    return {
+        restaurantReview: updatedRestaurantReview,
+        restaurantReviewEntry
+    };
+}
+
 module.exports = {
     createRestaurantReviewWithFirstEntry,
     getRestaurantReviewById,
-    recalcRestaurantReviewConsensus
+    recalcRestaurantReviewConsensus,
+    createRestaurantReviewEntry
 };
