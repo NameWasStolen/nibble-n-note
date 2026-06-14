@@ -361,11 +361,118 @@ async function deleteRestaurantReviewEntry({
     };
 }
 
+/**
+ * updateRestaurantReview
+ * Updates container-level restaurant review fields.
+ */
+async function updateRestaurantReview({
+    userId,
+    restaurantReviewId,
+    tagIds,
+    consensusRating,
+    consensusSource,
+    session = null
+}) {
+    // Validate IDs
+    validateObjectId(userId, 'userId');
+    validateObjectId(restaurantReviewId, 'restaurantReviewId');
+
+    // Require at least one update field
+    if (
+        tagIds === undefined &&
+        consensusRating === undefined &&
+        consensusSource === undefined
+    ) {
+        throw createHttpError('At least one of tagIds, consensusRating, or consensusSource is required', 400);
+    }
+
+    // Validate optional fields
+    if (tagIds !== undefined) { validateObjectIdArray(tagIds, 'tagIds'); }
+    if (consensusRating !== undefined) { validateRatingInput(consensusRating, 'consensusRating'); }
+    if (consensusSource !== undefined && !['entry_average', 'manual'].includes(consensusSource)) {
+        throw createHttpError('Invalid consensusSource', 400);
+    }
+
+    // Find restaurant review
+    const restaurantReview = await RestaurantReview.findById(restaurantReviewId).session(session);
+    if (!restaurantReview) {
+        throw createHttpError('Restaurant review not found', 404);
+    }
+
+    // Access control
+    if (restaurantReview.groupId) {
+        // TODO (Post-MVP): Restrict roles that can update consensus rating
+        // Current implementation: Any member can change consensus rating
+        await requireGroupMember({
+            groupId: restaurantReview.groupId,
+            userId,
+            session
+        });
+    } else {
+        const isOwner = restaurantReview.userId.toString() === userId.toString();
+        if (!isOwner) {
+            throw createHttpError('You do not have permission to update this restaurant review',403);
+        }
+    }
+
+    // Reject edge case: Conflict from setting 'entry_average' + consensusRating changes
+    if (consensusRating !== undefined && consensusSource === 'entry_average') {
+        throw createHttpError(
+            'Cannot provide consensusRating when resetting consensusSource to entry_average',
+            400
+        );
+    }
+
+    // Reject edge case: Setting 'manual', but with no consensusRating provided
+    if (consensusSource === 'manual' && consensusRating === undefined) {
+        throw createHttpError(
+            'consensusRating is required when setting consensusSource to manual',
+            400
+        );
+    }
+
+    // Update tags
+    if (tagIds !== undefined) {
+        restaurantReview.tagIds = tagIds;
+    }
+
+    // Update with new consensus rating if provided
+    if (consensusRating !== undefined) {
+        restaurantReview.consensusRating = consensusRating;
+        restaurantReview.consensusSource = 'manual';
+        restaurantReview.consensusUpdatedBy = userId;
+        restaurantReview.consensusUpdatedAt = new Date();
+    }
+
+    // If consensusSource is explicitly specified, do ratings recalculation
+    if (consensusSource === 'entry_average') {
+        restaurantReview.consensusSource = 'entry_average';
+
+        const updatedRestaurantReview = await recalcRestaurantReviewConsensus({
+            restaurantReview,
+            updatedByUserId: userId,
+            session
+        });
+
+        return {
+            restaurantReview: updatedRestaurantReview
+        };
+    }
+
+    // Save updates
+    await restaurantReview.save({ session });
+
+    return {
+        restaurantReview
+    };
+}
+
 module.exports = {
     createRestaurantReviewWithFirstEntry,
     getRestaurantReviewById,
     recalcRestaurantReviewConsensus,
     createRestaurantReviewEntry,
     updateRestaurantReviewEntry,
-    deleteRestaurantReviewEntry
+    deleteRestaurantReviewEntry,
+    updateRestaurantReview
 };
