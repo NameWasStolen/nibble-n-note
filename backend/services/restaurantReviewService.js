@@ -134,7 +134,7 @@ async function getRestaurantReviewById({ restaurantReviewId, userId }) {
  * recalcRestaurantReviewConsensus
  * Recalculates consensus rating from all entries if consensus source is entry_average.
  */
-async function recalcRestaurantReviewConsensus({ restaurantReview, updatedByUserId, session = null}) {
+async function recalcRestaurantReviewConsensus({ restaurantReview, updatedByUserId, session = null }) {
     // Confirm consensus source is entry_average before recalculating, otherwise skip
     if (restaurantReview.consensusSource !== 'entry_average') {
         return restaurantReview;
@@ -158,7 +158,7 @@ async function recalcRestaurantReviewConsensus({ restaurantReview, updatedByUser
     restaurantReview.consensusUpdatedBy = updatedByUserId;
     restaurantReview.consensusUpdatedAt = new Date();
 
-    // Save transaction in session if provided
+    // Save updated restaurant review in session if provided
     await restaurantReview.save({ session });
 
     return restaurantReview;
