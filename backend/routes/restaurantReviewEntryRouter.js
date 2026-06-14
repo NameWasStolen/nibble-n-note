@@ -8,7 +8,8 @@ const router = express.Router();
 // Setting routes
 // POST /api/restaurant-review-entries/
 router.post('/', authMiddleware, restaurantReviewEntryController.createRestaurantReviewEntry);
-// PATCH /api/restaurant-review-entries/:id TODO
+// PATCH /api/restaurant-review-entries/:id
+router.patch('/:id', authMiddleware, restaurantReviewEntryController.updateRestaurantReviewEntry)
 // DELETE /api/restaurant-review-entries/:id TODO
 
 module.exports = router;
