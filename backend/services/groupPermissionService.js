@@ -1,4 +1,5 @@
 const GroupMember = require('../models/GroupMember');
+const { createHttpError } = require('../utils/errorUtils');
 
 /**
  * requireGroupMember
@@ -10,9 +11,7 @@ async function requireGroupMember({ groupId, userId, session = null }) {
 
     // If not a member, throw error
     if (!membership) {
-        const error = new Error('You are not a member of this group');
-        error.statusCode = 403;
-        throw error;
+        throw createHttpError('You are not a member of this group', 403);
     }
 
     // Return membership document (contains role, join date, etc)
@@ -29,9 +28,7 @@ async function requireGroupRole({ groupId, userId, allowedRoles = [], session = 
 
     // Check if user's role is in allowedRoles
     if (!allowedRoles.includes(membership.role)) {
-        const error = new Error('You do not have permission to perform this action');
-        error.statusCode = 403;
-        throw error;
+        throw createHttpError('You do not have permission to perform this action', 403);
     }
 
     return membership;

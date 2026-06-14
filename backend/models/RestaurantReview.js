@@ -64,10 +64,8 @@ restaurantReviewSchema.pre('validate', function (next) {
 
     // Only ONE of userId or groupId should be set, to ensure distinction between personal and group restaurant reviews
     if (hasUser === hasGroup) {
-        return next(new Error('RestaurantReview must belong to exactly one of userId or groupId'));
+        throw new Error('RestaurantReview must belong to exactly one of userId or groupId');
     }
-
-    next();
 });
 
 // One personal restaurant review per user per location

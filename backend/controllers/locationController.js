@@ -32,8 +32,20 @@ module.exports = {
             // Return the location data
             res.status(200).json(location);
         } catch (err) {
-            // Log error and return 500
+            // Log error
             console.error(err);
+
+            // Validation error (e.g. missing required fields, invalid data types, etc.)
+            if (err.name === 'ValidationError') {
+                return res.status(400).json({ error: err.message });
+            }
+
+            // Cast error (e.g. invalid lat/lng format)
+            if (err.name === 'CastError') {
+                return res.status(400).json({ error: err.message });
+            }
+
+            // Catch all error response
             res.status(500).json({ error: 'Failed to create or update location' });
         }
     },
