@@ -10,6 +10,7 @@ const router = express.Router();
 router.post('/', authMiddleware, restaurantReviewEntryController.createRestaurantReviewEntry);
 // PATCH /api/restaurant-review-entries/:id
 router.patch('/:id', authMiddleware, restaurantReviewEntryController.updateRestaurantReviewEntry)
-// DELETE /api/restaurant-review-entries/:id TODO
+// DELETE /api/restaurant-review-entries/:id
+router.delete('/:id', authMiddleware, restaurantReviewEntryController.deleteRestaurantReviewEntry)
 
 module.exports = router;

@@ -7,7 +7,6 @@ const mongoose = require('mongoose');
 module.exports = {
     createRestaurantReviewEntry: async (req, res) => {
         const session = await mongoose.startSession();
-
         try {
             // Start session for transaction (creating entry + updating consensus rating if entry_average set)
             session.startTransaction();
@@ -59,13 +58,11 @@ module.exports = {
                 error: 'Failed to create restaurant review entry'
             });
         } finally {
-            // End session
             session.endSession();
         }
     },
     updateRestaurantReviewEntry: async (req, res) => {
         const session = await mongoose.startSession();
-
         try {
             session.startTransaction();
 
@@ -103,7 +100,44 @@ module.exports = {
                 error: 'Failed to update restaurant review entry'
             });
         } finally {
-            // End session
+            session.endSession();
+        }
+    },
+    deleteRestaurantReviewEntry: async (req, res) => {
+        const session = await mongoose.startSession();
+        try {
+            session.startTransaction();
+
+            const { id } = req.params; // id is restaurantReviewEntry id
+
+            // Delete restaurant review entry
+            const result = await restaurantReviewService.deleteRestaurantReviewEntry({
+                userId: req.userId,
+                restaurantReviewEntryId: id,
+                session
+            });
+
+            // Commit transaction
+            await session.commitTransaction();
+
+            return res.status(200).json(result);
+        } catch (err) {
+            // If error, abort transaction and return error response
+            await session.abortTransaction();
+            console.error(err);
+
+            if (err.statusCode) {
+                return res.status(err.statusCode).json({ error: err.message });
+            }
+
+            if (err.name === 'ValidationError' || err.name === 'CastError') {
+                return res.status(400).json({ error: err.message });
+            }
+
+            return res.status(500).json({
+                error: 'Failed to delete restaurant review entry'
+            });
+        } finally {
             session.endSession();
         }
     }
