@@ -156,5 +156,44 @@ module.exports = {
             session.endSession();
         }
     },
-    deleteRestaurantReview: async (req, res) => {}
+    deleteRestaurantReview: async (req, res) => {
+        const session = await mongoose.startSession();
+        try {
+            session.startTransaction();
+
+            const { id } = req.params;
+
+            // Delete restaurant review + all associated restaurant review entries
+            const result = await restaurantReviewService.deleteRestaurantReview({
+                userId: req.userId,
+                restaurantReviewId: id,
+                session
+            });
+
+            await session.commitTransaction();
+
+            return res.status(200).json(result);
+        } catch (err) {
+            // If error, abort transaction and return error response
+            await session.abortTransaction();
+            console.error(err);
+
+            // Custom HTTP error thrown by service
+            if (err.statusCode) {
+                return res.status(err.statusCode).json({ error: err.message });
+            }
+
+            // Mongoose validation / cast error
+            if (err.name === 'ValidationError' || err.name === 'CastError') {
+                return res.status(400).json({ error: err.message });
+            }
+
+            // Catch-all for all other errors
+            return res.status(500).json({
+                error: 'Failed to delete restaurant review'
+            });
+        } finally {
+            session.endSession();
+        }
+    }
 }
