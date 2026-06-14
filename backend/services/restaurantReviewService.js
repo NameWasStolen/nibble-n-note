@@ -305,5 +305,6 @@ module.exports = {
     createRestaurantReviewWithFirstEntry,
     getRestaurantReviewById,
     recalcRestaurantReviewConsensus,
-    createRestaurantReviewEntry
+    createRestaurantReviewEntry,
+    updateRestaurantReviewEntry
 };
