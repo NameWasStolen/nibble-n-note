@@ -467,6 +467,54 @@ async function updateRestaurantReview({
     };
 }
 
+/**
+ * deleteRestaurantReview
+ * Deletes a restaurant review container and its linked entries.
+ */
+async function deleteRestaurantReview({
+    userId,
+    restaurantReviewId,
+    session = null
+}) {
+    // Validate IDs
+    validateObjectId(userId, 'userId');
+    validateObjectId(restaurantReviewId, 'restaurantReviewId');
+
+    // Find restaurant review
+    const restaurantReview = await RestaurantReview.findById(restaurantReviewId).session(session);
+    if (!restaurantReview) { throw createHttpError('Restaurant review not found', 404); }
+
+    // Access control
+    if (restaurantReview.groupId) {
+        // TODO (Post-MVP): Restrict delete permission to group owner/admin
+        // Current implementation: Any group member can delete the restaurant review
+        await requireGroupMember({
+            groupId: restaurantReview.groupId,
+            userId,
+            session
+        });
+    } else {
+        const isOwner = restaurantReview.userId.toString() === userId.toString();
+        if (!isOwner) {
+            throw createHttpError('You do not have permission to delete this restaurant review', 403);
+        }
+    }
+
+    // Delete linked entries first
+    await RestaurantReviewEntry.deleteMany({
+        restaurantReviewId: restaurantReview._id
+    }).session(session);
+
+    // Delete restaurant review container
+    await RestaurantReview.deleteOne({
+        _id: restaurantReview._id
+    }).session(session);
+
+    return {
+        deletedRestaurantReviewId: restaurantReview._id
+    };
+}
+
 module.exports = {
     createRestaurantReviewWithFirstEntry,
     getRestaurantReviewById,
@@ -474,5 +522,6 @@ module.exports = {
     createRestaurantReviewEntry,
     updateRestaurantReviewEntry,
     deleteRestaurantReviewEntry,
-    updateRestaurantReview
+    updateRestaurantReview,
+    deleteRestaurantReview
 };
