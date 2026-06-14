@@ -62,14 +62,12 @@ dishReviewSchema.pre('validate', function (next) {
 
     // Only ONE of userId or groupId should be set, to ensure distinction between personal and group dish reviews
     if (hasUser === hasGroup) {
-        return next(new Error('DishReview must belong to exactly one of userId or groupId'));
+        throw new Error('DishReview must belong to exactly one of userId or groupId');
     }
 
     if (this.dishName) {
         this.normalisedDishName = this.dishName.trim().toLowerCase();
     }
-
-    next();
 });
 
 // One personal dish review per user per location per dish name
