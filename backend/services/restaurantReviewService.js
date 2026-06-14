@@ -2,6 +2,7 @@
 const RestaurantReview = require('../models/RestaurantReview');
 const RestaurantReviewEntry = require('../models/RestaurantReviewEntry');
 const Location = require('../models/Location');
+const Tag = require('../models/Tag');
 const { validateObjectId, validateRatingInput, validateObjectIdArray, validateArray } = require('../utils/validators');
 const { requireGroupMember } = require('./groupPermissionService');
 
