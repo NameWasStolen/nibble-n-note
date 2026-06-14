@@ -149,7 +149,13 @@ async function recalcRestaurantReviewConsensus({ restaurantReview, updatedByUser
     }
 
     // Update restaurant review consensus rating and updatedBy/updatedAt fields
-    restaurantReview.consensusRating = averageConsensusRating;
+    const existingComment = restaurantReview.consensusRating?.comment;
+    restaurantReview.consensusRating = {
+        foodRating: averageConsensusRating.foodRating,
+        valueRating: averageConsensusRating.valueRating,
+        overallRating: averageConsensusRating.overallRating,
+        ...(existingComment ? { comment: existingComment } : {}) // Only add comment field if existing comment
+    };
     restaurantReview.consensusUpdatedBy = updatedByUserId;
     restaurantReview.consensusUpdatedAt = new Date();
 
@@ -417,18 +423,12 @@ async function updateRestaurantReview({
 
     // Reject edge case: Conflict from setting 'entry_average' + consensusRating changes
     if (consensusRating !== undefined && consensusSource === 'entry_average') {
-        throw createHttpError(
-            'Cannot provide consensusRating when resetting consensusSource to entry_average',
-            400
-        );
+        throw createHttpError('Cannot provide consensusRating when resetting consensusSource to entry_average', 400);
     }
 
     // Reject edge case: Setting 'manual', but with no consensusRating provided
     if (consensusSource === 'manual' && consensusRating === undefined) {
-        throw createHttpError(
-            'consensusRating is required when setting consensusSource to manual',
-            400
-        );
+        throw createHttpError('consensusRating is required when setting consensusSource to manual', 400);
     }
 
     // Update tags

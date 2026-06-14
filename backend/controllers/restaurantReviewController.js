@@ -53,7 +53,7 @@ module.exports = {
                 });
             }
 
-            // Validation error (e.g. invalid rating value, invalid locationId/groupId, etc.)
+            // Custom HTTP error thrown by service
             if (err.statusCode) {
                 return res.status(err.statusCode).json({ error: err.message });
             }
@@ -92,7 +92,7 @@ module.exports = {
             // Log error for debugging
             console.error(err);
 
-            // If error has statusCode, it's a custom error thrown in service layer (e.g. 404 not found, 403 forbidden, etc.)
+            // Custom HTTP error thrown by service
             if (err.statusCode) {
                 return res.status(err.statusCode).json({ error: err.message });
             }
@@ -108,6 +108,53 @@ module.exports = {
             });
         }
     },
-    updateRestaurantReview: async (req, res) => {},
+    updateRestaurantReview: async (req, res) => {
+        const session = await mongoose.startSession();
+        try {
+            session.startTransaction();
+
+            const { id } = req.params; // id is restaurant review id
+            const {
+                tagIds,
+                consensusRating,
+                consensusSource
+            } = req.body;
+
+            // Update restaurant review
+            const result = await restaurantReviewService.updateRestaurantReview({
+                userId: req.userId,
+                restaurantReviewId: id,
+                tagIds,
+                consensusRating,
+                consensusSource,
+                session
+            });
+
+            await session.commitTransaction();
+
+            return res.status(200).json(result);
+        } catch (err) {
+            // If error, abort transaction and return error response
+            await session.abortTransaction();
+            console.error(err);
+
+            // Custom HTTP error thrown by service
+            if (err.statusCode) {
+                return res.status(err.statusCode).json({ error: err.message });
+            }
+
+            // Mongoose validation / cast error
+            if (err.name === 'ValidationError' || err.name === 'CastError') {
+                return res.status(400).json({ error: err.message });
+            }
+
+            // Catch-all for all other errors
+            return res.status(500).json({
+                error: 'Failed to update restaurant review'
+            });
+        } finally {
+            session.endSession();
+        }
+    },
     deleteRestaurantReview: async (req, res) => {}
 }
