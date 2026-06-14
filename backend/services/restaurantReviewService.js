@@ -263,10 +263,7 @@ async function updateRestaurantReviewEntry({
     // Users can only update their own entry
     const isEntryOwner = restaurantReviewEntry.userId.toString() === userId.toString();
     if (!isEntryOwner) {
-        throw createHttpError(
-            'You do not have permission to update this restaurant review entry',
-            403
-        );
+        throw createHttpError('You do not have permission to update this restaurant review entry', 403);
     }
 
     // Find parent restaurant review container
@@ -301,10 +298,74 @@ async function updateRestaurantReviewEntry({
     };
 }
 
+/**
+ * deleteRestaurantReviewEntry
+ * Deletes a user's own restaurant review entry.
+ */
+async function deleteRestaurantReviewEntry({
+    userId,
+    restaurantReviewEntryId,
+    session = null
+}) {
+    // Validate IDs
+    validateObjectId(userId, 'userId');
+    validateObjectId(restaurantReviewEntryId, 'restaurantReviewEntryId');
+
+    // Find entry
+    const restaurantReviewEntry = await RestaurantReviewEntry.findById(
+        restaurantReviewEntryId
+    ).session(session);
+    if (!restaurantReviewEntry) {
+        throw createHttpError('Restaurant review entry not found', 404);
+    }
+
+    // Users can only delete their own entry
+    const isEntryOwner = restaurantReviewEntry.userId.toString() === userId.toString();
+    if (!isEntryOwner) {
+        throw createHttpError('You do not have permission to delete this restaurant review entry', 403);
+    }
+
+    // Find parent restaurant review container
+    const restaurantReview = await RestaurantReview.findById(
+        restaurantReviewEntry.restaurantReviewId
+    ).session(session);
+    if (!restaurantReview) {
+        throw createHttpError('Parent restaurant review not found', 404);
+    }
+
+    // Count entries before deleting
+    const entryCount = await RestaurantReviewEntry.countDocuments({
+        restaurantReviewId: restaurantReview._id
+    }).session(session);
+
+    // MVP rule: do not allow deleting the final entry
+    if (entryCount <= 1) {
+        throw createHttpError('Cannot delete the last entry for a restaurant review', 400);
+    }
+
+    // Delete entry
+    await RestaurantReviewEntry.deleteOne({
+        _id: restaurantReviewEntry._id
+    }).session(session);
+
+    // Recalculate parent consensus rating only if consensusSource is entry_average
+    const updatedRestaurantReview = await recalcRestaurantReviewConsensus({
+        restaurantReview,
+        updatedByUserId: userId,
+        session
+    });
+
+    return {
+        restaurantReview: updatedRestaurantReview,
+        deletedRestaurantReviewEntryId: restaurantReviewEntry._id
+    };
+}
+
 module.exports = {
     createRestaurantReviewWithFirstEntry,
     getRestaurantReviewById,
     recalcRestaurantReviewConsensus,
     createRestaurantReviewEntry,
-    updateRestaurantReviewEntry
+    updateRestaurantReviewEntry,
+    deleteRestaurantReviewEntry
 };
