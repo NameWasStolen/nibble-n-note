@@ -49,16 +49,13 @@ tagSchema.pre('validate', function (next) {
     // Only ONE of userId or groupId should be set, to ensure distinction between user and group tags
     // Return error if both are set or both are not set
     if (hasUser === hasGroup) {
-        return next(new Error('Tag must belong to exactly one of userId or groupId'));
+        throw new Error('Tag must belong to exactly one of userId or groupId');
     }
 
     /* Generate normalised name from name */
     if (this.name) {
         this.normalisedName = this.name.trim().toLowerCase();
     }
-
-    // If validation passes, proceed to save
-    next();
 });
 
 // Prevent duplicate personal tags
