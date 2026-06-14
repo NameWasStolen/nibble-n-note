@@ -4,8 +4,8 @@ const RestaurantReviewEntry = require('../models/RestaurantReviewEntry');
 const Location = require('../models/Location');
 const Tag = require('../models/Tag');
 const { validateObjectId, validateRatingInput, validateObjectIdArray, validateArray } = require('../utils/validators');
+const { getAvgRating } = require('../utils/ratingUtils');
 const { requireGroupMember } = require('./groupPermissionService');
-
 /**
  * createRestaurantReviewWithFirstEntry
  * Creates a restaurant review with a first entry
@@ -130,7 +130,42 @@ async function getRestaurantReviewById({ restaurantReviewId, userId }) {
     };
 }
 
+/**
+ * recalcRestaurantReviewConsensus
+ * Recalculates consensus rating from all entries if consensus source is entry_average.
+ */
+async function recalcRestaurantReviewConsensus({ restaurantReview, updatedByUserId, session = null}) {
+    // Confirm consensus source is entry_average before recalculating, otherwise skip
+    if (restaurantReview.consensusSource !== 'entry_average') {
+        return restaurantReview;
+    }
+
+    // Get all entries relating to restaurant review
+    const entries = await RestaurantReviewEntry.find({
+        restaurantReviewId: restaurantReview._id
+    }).session(session);
+
+    // Get average consensus rating from entries
+    const averageConsensusRating = getAvgRating(entries);
+
+    // If no entries, skip updating consensus rating
+    if (!averageConsensusRating) {
+        return restaurantReview;
+    }
+
+    // Update restaurant review consensus rating and updatedBy/updatedAt fields
+    restaurantReview.consensusRating = averageConsensusRating;
+    restaurantReview.consensusUpdatedBy = updatedByUserId;
+    restaurantReview.consensusUpdatedAt = new Date();
+
+    // Save transaction in session if provided
+    await restaurantReview.save({ session });
+
+    return restaurantReview;
+}
+
 module.exports = {
     createRestaurantReviewWithFirstEntry,
-    getRestaurantReviewById
+    getRestaurantReviewById,
+    recalcRestaurantReviewConsensus
 };
