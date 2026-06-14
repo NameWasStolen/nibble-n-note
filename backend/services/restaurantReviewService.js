@@ -5,6 +5,7 @@ const Location = require('../models/Location');
 const Tag = require('../models/Tag');
 const { validateObjectId, validateRatingInput, validateObjectIdArray, validateArray } = require('../utils/validators');
 const { getAvgRating } = require('../utils/ratingUtils');
+const { createHttpError } = require('../utils/errorUtils');
 const { requireGroupMember } = require('./groupPermissionService');
 /**
  * createRestaurantReviewWithFirstEntry
@@ -36,9 +37,7 @@ async function createRestaurantReviewWithFirstEntry({
     // Confirm location exists
     const location = await Location.findById(locationId).session(session);
     if (!location) {
-        const error = new Error('Location not found');
-        error.statusCode = 404;
-        throw error;
+        throw createHttpError('Location not found', 404);
     }
 
     // Create restaurant review container, using userRating for initial consensusRating data
@@ -98,9 +97,7 @@ async function getRestaurantReviewById({ restaurantReviewId, userId }) {
 
     // If not found, throw 404
     if (!restaurantReview) {
-        const error = new Error('Restaurant review not found');
-        error.statusCode = 404;
-        throw error;
+        throw createHttpError('Restaurant review not found', 404);
     }
 
     // Access control: Check if user is owner or group member (if group review)
@@ -113,9 +110,7 @@ async function getRestaurantReviewById({ restaurantReviewId, userId }) {
         const isOwner = restaurantReview.userId.toString() === userId.toString();
 
         if (!isOwner) {
-            const error = new Error('You do not have permission to view this restaurant review');
-            error.statusCode = 403;
-            throw error;
+            throw createHttpError('You do not have permission to view this restaurant review', 403);
         }
     }
 
@@ -184,9 +179,7 @@ async function createRestaurantReviewEntry({
     // Find restaurant review container
     const restaurantReview = await RestaurantReview.findById(restaurantReviewId).session(session);
     if (!restaurantReview) {
-        const error = new Error('Restaurant review not found');
-        error.statusCode = 404;
-        throw error;
+        throw createHttpError('Restaurant review not found', 404);
     }
 
     // Access control: user must own personal review, or be member of group review
@@ -200,9 +193,7 @@ async function createRestaurantReviewEntry({
         const isOwner = restaurantReview.userId.toString() === userId.toString();
 
         if (!isOwner) {
-            const error = new Error('You do not have permission to add an entry to this restaurant review');
-            error.statusCode = 403;
-            throw error;
+            throw createHttpError('You do not have permission to add an entry to this restaurant review', 403);
         }
     }
 
