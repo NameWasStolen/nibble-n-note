@@ -1,0 +1,20 @@
+const express = require('express');
+const groupController = require('../controllers/groupController.js');
+const authMiddleware = require('../middleware/authMiddleware.js');
+
+// Create router
+const router = express.Router();
+
+// Setting routes
+// POST /api/groups
+router.post('/', authMiddleware, groupController.createGroup);
+// GET /api/groups
+// GET /api/groups/:id
+// PATCH /api/groups/:id
+// DELETE /api/groups/:id
+// POST /api/groups/:groupId/members
+// GET /api/groups/:groupId/members
+// PATCH /api/groups/:groupId/members/:userId
+// DELETE /api/groups/:groupId/members/:userId
+
+module.exports = router;
