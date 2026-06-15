@@ -9,6 +9,7 @@ const router = express.Router();
 // POST /api/groups
 router.post('/', authMiddleware, groupController.createGroup);
 // GET /api/groups
+router.get('/', authMiddleware, groupController.getUserGroups);
 // GET /api/groups/:id
 // PATCH /api/groups/:id
 // DELETE /api/groups/:id

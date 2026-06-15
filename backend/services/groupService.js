@@ -75,5 +75,6 @@ async function getUserGroups({ userId }) {
 }
 
 module.exports = {
-    createGroup
+    createGroup, 
+    getUserGroups
 };
