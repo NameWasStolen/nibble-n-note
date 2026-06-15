@@ -47,6 +47,33 @@ async function createGroup({ userId, name, session = null }) {
     };
 }
 
+/**
+ * getUserGroups
+ * Gets all groups that the current user is a member of.
+ */
+async function getUserGroups({ userId }) {
+    // Validate userId
+    validateObjectId(userId, 'userId');
+
+    // Find all GroupMember records involving this user
+    const memberships = await GroupMember.find({ userId })
+        .populate('groupId', 'name creatorId createdAt updatedAt')
+        .sort({ joinedAt: -1 });
+
+    // Create array containing info about each group + membership
+    const groups = memberships.map((membership) => (
+        {
+            membership: {
+                _id: membership._id,
+                role: membership.role,
+                joinedAt: membership.joinedAt
+            },
+            group: membership.groupId
+        }))
+
+    return { groups };
+}
+
 module.exports = {
     createGroup
 };
