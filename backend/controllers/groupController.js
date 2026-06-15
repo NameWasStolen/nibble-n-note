@@ -72,5 +72,34 @@ module.exports = {
             // Catch-all for other errors
             return res.status(500).json({ error: 'Failed to get groups' });
         }
+    },
+    getGroupById: async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Get group information
+        const result = await groupService.getGroupById({
+            groupId: id,
+            userId: req.userId
+        });
+
+        return res.status(200).json(result);
+    } catch (err) {
+        // Log error
+        console.error(err);
+
+        // Custom service-level HTTP error
+        if (err.statusCode) {
+            return res.status(err.statusCode).json({ error: err.message });
+        }
+
+        // Mongoose validation / cast error
+        if (err.name === 'ValidationError' || err.name === 'CastError') {
+            return res.status(400).json({ error: err.message });
+        }
+
+        // Catch-all for other errors
+        return res.status(500).json({ error: 'Failed to get group' });
     }
+}
 };

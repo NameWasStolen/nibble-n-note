@@ -11,6 +11,7 @@ router.post('/', authMiddleware, groupController.createGroup);
 // GET /api/groups
 router.get('/', authMiddleware, groupController.getUserGroups);
 // GET /api/groups/:id
+router.get('/:id', authMiddleware, groupController.getGroupById);
 // PATCH /api/groups/:id
 // DELETE /api/groups/:id
 // POST /api/groups/:groupId/members
