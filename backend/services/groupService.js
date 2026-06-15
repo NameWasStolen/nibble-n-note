@@ -74,7 +74,39 @@ async function getUserGroups({ userId }) {
     return { groups };
 }
 
+/**
+ * getGroupById
+ * Gets one group by ID if the current user is a member.
+ */
+async function getGroupById({ groupId, userId }) {
+    // Validations
+    validateObjectId(groupId, 'groupId');
+    validateObjectId(userId, 'userId');
+
+    // Find group by groupId
+    const group = await Group.findById(groupId)
+        .populate('creatorId', 'name email');
+    if (!group) {
+        throw createHttpError('Group not found', 404);
+    }
+
+    // Confirm user has permission to view group (member has to be in this group to view)
+    const membership = await GroupMember.findOne({
+        groupId,
+        userId
+    });
+    if (!membership) {
+        throw createHttpError('You do not have permission to view this group', 403);
+    }
+
+    return {
+        group,
+        currentUserMembership: membership
+    };
+}
+
 module.exports = {
     createGroup, 
-    getUserGroups
+    getUserGroups, 
+    getGroupById
 };
