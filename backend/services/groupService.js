@@ -3,6 +3,7 @@ const Group = require('../models/Group');
 const GroupMember = require('../models/GroupMember');
 const { createHttpError } = require('../utils/errorUtils');
 const { validateObjectId } = require('../utils/validators');
+const { requireGroupRole } = require('./groupPermissionService')
 
 /**
  * createGroup
@@ -105,8 +106,53 @@ async function getGroupById({ groupId, userId }) {
     };
 }
 
+/**
+ * updateGroup
+ * Updates group-level fields.
+ */
+async function updateGroup({
+    groupId,
+    userId,
+    name
+}) {
+    // Validate IDs
+    validateObjectId(groupId, 'groupId');
+    validateObjectId(userId, 'userId');
+
+    // Require at least one update field
+    if (name === undefined) {
+        throw createHttpError('At least one update field is required', 400);
+    }
+
+    // Validate name if provided
+    if (typeof name !== 'string' || name.trim().length === 0) {
+        throw createHttpError('Group name is required', 400);
+    }
+
+    // Find group
+    const group = await Group.findById(groupId);
+    if (!group) {
+        throw createHttpError('Group not found', 404);
+    }
+
+    // Only Owner/Admin can update group
+    await requireGroupRole({
+        groupId,
+        userId,
+        allowedRoles: ['Owner', 'Admin']
+    });
+
+    // Apply updates
+    group.name = name.trim();
+
+    await group.save();
+
+    return { group };
+}
+
 module.exports = {
     createGroup, 
     getUserGroups, 
-    getGroupById
+    getGroupById,
+    updateGroup
 };
