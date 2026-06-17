@@ -150,9 +150,52 @@ async function updateGroup({
     return { group };
 }
 
+/**
+ * deleteGroup
+ * Deletes a group and its linked group members.
+ */
+async function deleteGroup({
+    groupId,
+    userId,
+    session = null
+}) {
+    // Validate IDs
+    validateObjectId(groupId, 'groupId');
+    validateObjectId(userId, 'userId');
+
+    // Find group
+    const group = await Group.findById(groupId).session(session);
+    if (!group) {
+        throw createHttpError('Group not found', 404);
+    }
+
+    // Only Owner can delete group
+    await requireGroupRole({
+        groupId,
+        userId,
+        allowedRoles: ['Owner'],
+        session
+    });
+
+    // Delete group members first
+    await GroupMember.deleteMany({
+        groupId: group._id
+    }).session(session);
+
+    // Delete group
+    await Group.deleteOne({
+        _id: group._id
+    }).session(session);
+
+    return {
+        deletedGroupId: group._id
+    };
+}
+
 module.exports = {
     createGroup, 
     getUserGroups, 
     getGroupById,
-    updateGroup
+    updateGroup, 
+    deleteGroup
 };
