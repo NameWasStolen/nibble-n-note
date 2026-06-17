@@ -173,7 +173,7 @@ async function deleteGroup({
     await requireGroupRole({
         groupId,
         userId,
-        allowedRoles: ['Owner'],
+        allowedRoles: ['owner'],
         session
     });
 
