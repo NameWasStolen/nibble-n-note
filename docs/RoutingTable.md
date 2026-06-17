@@ -105,7 +105,7 @@ Last Updated: 08/06/2026
 | POST | `/api/groups` | Yes | Create group | `name` | `201 Group` | Also creates owner membership | ☑ |
 | GET | `/api/groups` | Yes | List user groups | None | `200 Group[]` | Uses GroupMember records | ☑ |
 | GET | `/api/groups/:id` | Yes | Get group details | `id` | `200 Group` | Must be group member | ☑ |
-| PATCH | `/api/groups/:id` | Yes | Update group | `name` | `200 Group` | Owner/Admin only | [ ] |
+| PATCH | `/api/groups/:id` | Yes | Update group | `name` | `200 Group` | Owner/Admin only | ☑ |
 | DELETE | `/api/groups/:id` | Yes | Delete group | `id` | `204 No Content` | Owner only | [ ] |
 
 ---

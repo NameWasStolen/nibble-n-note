@@ -139,7 +139,7 @@ async function updateGroup({
     await requireGroupRole({
         groupId,
         userId,
-        allowedRoles: ['Owner', 'Admin']
+        allowedRoles: ['owner', 'admin']
     });
 
     // Apply updates

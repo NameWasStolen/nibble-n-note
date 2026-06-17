@@ -13,6 +13,7 @@ router.get('/', authMiddleware, groupController.getUserGroups);
 // GET /api/groups/:id
 router.get('/:id', authMiddleware, groupController.getGroupById);
 // PATCH /api/groups/:id
+router.patch('/:id', authMiddleware, groupController.updateGroup);
 // DELETE /api/groups/:id
 // POST /api/groups/:groupId/members
 // GET /api/groups/:groupId/members

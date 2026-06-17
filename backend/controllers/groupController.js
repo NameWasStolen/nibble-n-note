@@ -74,32 +74,64 @@ module.exports = {
         }
     },
     getGroupById: async (req, res) => {
-    try {
-        const { id } = req.params;
+        try {
+            const { id } = req.params;
 
-        // Get group information
-        const result = await groupService.getGroupById({
-            groupId: id,
-            userId: req.userId
-        });
+            // Get group information
+            const result = await groupService.getGroupById({
+                groupId: id,
+                userId: req.userId
+            });
 
-        return res.status(200).json(result);
-    } catch (err) {
-        // Log error
-        console.error(err);
+            return res.status(200).json(result);
+        } catch (err) {
+            // Log error
+            console.error(err);
 
-        // Custom service-level HTTP error
-        if (err.statusCode) {
-            return res.status(err.statusCode).json({ error: err.message });
+            // Custom service-level HTTP error
+            if (err.statusCode) {
+                return res.status(err.statusCode).json({ error: err.message });
+            }
+
+            // Mongoose validation / cast error
+            if (err.name === 'ValidationError' || err.name === 'CastError') {
+                return res.status(400).json({ error: err.message });
+            }
+
+            // Catch-all for other errors
+            return res.status(500).json({ error: 'Failed to get group' });
         }
+    }, 
+    updateGroup: async (req, res) => {
+        try {
+            // Get vars
+            const { id } = req.params;
+            const { name } = req.body || {}; // If name undefined, set to empty object and catch error within service
 
-        // Mongoose validation / cast error
-        if (err.name === 'ValidationError' || err.name === 'CastError') {
-            return res.status(400).json({ error: err.message });
+            // Try to update group
+            const result = await groupService.updateGroup({
+                groupId: id,
+                userId: req.userId,
+                name
+            });
+
+            return res.status(200).json(result);
+        } catch (err) {
+            // Log error
+            console.error(err);
+
+            // Custom service-level HTTP error
+            if (err.statusCode) {
+                return res.status(err.statusCode).json({ error: err.message });
+            }
+
+            // Mongoose validation / cast error
+            if (err.name === 'ValidationError' || err.name === 'CastError') {
+                return res.status(400).json({ error: err.message });
+            }
+
+            // Catch-all for other errors
+            return res.status(500).json({ error: 'Failed to update group' });
         }
-
-        // Catch-all for other errors
-        return res.status(500).json({ error: 'Failed to get group' });
     }
-}
 };
