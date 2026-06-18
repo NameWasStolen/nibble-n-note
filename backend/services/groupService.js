@@ -289,6 +289,7 @@ async function getGroupMembers({ groupId, userId }) {
 /**
  * updateGroupMemberRole
  * Updates a group member's role.
+ * Users cannot change their own role. Owner cannot be changed.
  */
 async function updateGroupMemberRole({
     groupId,
@@ -357,6 +358,66 @@ async function updateGroupMemberRole({
     };
 }
 
+/**
+ * deleteGroupMember
+ * Removes a user from a group.
+ * Owner / Admin can remove members. Cannot remove the Owner. Cannot remove yourself.
+ * TODO (Post-MVP): Make a "leave group" endpoint for people to leave
+ */
+async function deleteGroupMember({
+    groupId,
+    senderUserId,
+    receiverUserId,
+    session = null
+}) {
+    // Validate IDs
+    validateObjectId(groupId, 'groupId');
+    validateObjectId(senderUserId, 'senderUserId');
+    validateObjectId(receiverUserId, 'userId');
+
+    // Find group
+    const group = await Group.findById(groupId).session(session);
+    if (!group) {
+        throw createHttpError('Group not found', 404);
+    }
+
+    // Only Owner/Admin can manage members
+    await requireGroupRole({
+        groupId,
+        userId: senderUserId,
+        allowedRoles: GROUP_ROLE_PERMISSIONS.CAN_MANAGE_MEMBERS,
+        session
+    });
+
+    // Do not allow users to remove themselves through this endpoint
+    if (senderUserId.toString() === receiverUserId.toString()) {
+        throw createHttpError('You cannot remove yourself from the group', 400);
+    }
+
+    // Find target membership
+    const targetMembership = await GroupMember.findOne({
+        groupId,
+        userId: receiverUserId
+    }).session(session);
+    if (!targetMembership) {
+        throw createHttpError('Group member not found', 404);
+    }
+
+    // Do not allow removing the group owner
+    if (targetMembership.role === GROUP_ROLES.OWNER) {
+        throw createHttpError('Cannot remove the group owner', 400);
+    }
+
+    // Delete target membership
+    await GroupMember.deleteOne({
+        _id: targetMembership._id
+    }).session(session);
+
+    return {
+        deletedGroupMemberId: targetMembership._id
+    };
+}
+
 module.exports = {
     createGroup, 
     getUserGroups, 
@@ -365,5 +426,6 @@ module.exports = {
     deleteGroup, 
     addGroupMember, 
     getGroupMembers,
-    updateGroupMemberRole
+    updateGroupMemberRole,
+    deleteGroupMember
 };
