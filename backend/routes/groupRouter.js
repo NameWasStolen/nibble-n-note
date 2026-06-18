@@ -19,6 +19,7 @@ router.delete('/:id', authMiddleware, groupController.deleteGroup)
 // POST /api/groups/:groupId/members
 router.post('/:groupId/members', authMiddleware, groupController.addGroupMember);
 // GET /api/groups/:groupId/members
+router.get('/:groupId/members', authMiddleware, groupController.getGroupMembers);
 // PATCH /api/groups/:groupId/members/:userId
 // DELETE /api/groups/:groupId/members/:userId
 

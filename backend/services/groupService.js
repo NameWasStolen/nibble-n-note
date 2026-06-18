@@ -3,7 +3,7 @@ const Group = require('../models/Group');
 const GroupMember = require('../models/GroupMember');
 const { createHttpError } = require('../utils/errorUtils');
 const { validateObjectId } = require('../utils/validators');
-const { requireGroupRole } = require('./groupPermissionService');
+const { requireGroupRole, requireGroupMember } = require('./groupPermissionService');
 const { GROUP_ROLES, GROUP_ROLE_VALUES, GROUP_ROLE_PERMISSIONS } = require('../constants/groupRoles');
 
 /**

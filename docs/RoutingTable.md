@@ -115,6 +115,6 @@ Last Updated: 08/06/2026
 | Method | Route | Auth | Purpose | Parameters | Success Response | Notes | Implemented? |
 |----------|----------|----------|----------|----------|----------|----------|----------|
 | POST | `/api/groups/:groupId/members` | Yes | Add member | `userId, role?` | `201 GroupMember` | Owner/Admin only | ☑ |
-| GET | `/api/groups/:groupId/members` | Yes | Get all group members | `id` | `200 GroupMember[]` | Member of that group only | [ ] |
+| GET | `/api/groups/:groupId/members` | Yes | Get all group members | `id` | `200 GroupMember[]` | Member of that group only | ☑ |
 | PATCH | `/api/groups/:groupId/members/:userId` | Yes | Update member role | `role` | `200 GroupMember` | Owner only | [ ] |
 | DELETE | `/api/groups/:groupId/members/:userId` | Yes | Remove member | `groupId, userId` | `204 No Content` | Owner/Admin rules | [ ] |
