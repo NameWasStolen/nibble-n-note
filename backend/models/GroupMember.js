@@ -1,3 +1,4 @@
+const { GROUP_ROLES, GROUP_ROLE_VALUES } = require('../constants/groupRoles')
 const mongoose = require('mongoose');
 
 const groupMemberSchema = new mongoose.Schema(
@@ -14,8 +15,8 @@ const groupMemberSchema = new mongoose.Schema(
         },
         role: {
             type: String,
-            enum: ['owner', 'admin', 'member'],
-            default: 'member',
+            enum: GROUP_ROLE_VALUES,
+            default: GROUP_ROLES.MEMBER,
             required: true
         },
         joinedAt: {

@@ -3,7 +3,8 @@ const Group = require('../models/Group');
 const GroupMember = require('../models/GroupMember');
 const { createHttpError } = require('../utils/errorUtils');
 const { validateObjectId } = require('../utils/validators');
-const { requireGroupRole } = require('./groupPermissionService')
+const { requireGroupRole } = require('./groupPermissionService');
+const { GROUP_ROLES, GROUP_ROLE_VALUES, GROUP_ROLE_PERMISSIONS } = require('../constants/groupRoles');
 
 /**
  * createGroup
@@ -34,7 +35,7 @@ async function createGroup({ userId, name, session = null }) {
             {
                 groupId: group._id,
                 userId,
-                role: 'owner',
+                role: GROUP_ROLES.OWNER,
                 invitedBy: null
             }
         ],
@@ -139,7 +140,7 @@ async function updateGroup({
     await requireGroupRole({
         groupId,
         userId,
-        allowedRoles: ['owner', 'admin']
+        allowedRoles: GROUP_ROLE_PERMISSIONS.CAN_MANAGE_GROUP
     });
 
     // Apply updates
@@ -173,7 +174,7 @@ async function deleteGroup({
     await requireGroupRole({
         groupId,
         userId,
-        allowedRoles: ['owner'],
+        allowedRoles: GROUP_ROLE_PERMISSIONS.CAN_DELETE_GROUP,
         session
     });
 
@@ -200,7 +201,7 @@ async function addGroupMember({
     groupId,
     senderUserId,
     receiverUserId,
-    role = 'member',
+    role = GROUP_ROLES.MEMBER,
     session = null
 }) {
     // Validate IDs
@@ -209,7 +210,7 @@ async function addGroupMember({
     validateObjectId(receiverUserId, 'receiverUserId');
 
     // Validate role
-    if (!['owner', 'admin', 'member'].includes(role)) {
+    if (!GROUP_ROLE_VALUES.includes(role)) {
         throw createHttpError('Invalid group member role', 400);
     }
 
@@ -223,12 +224,12 @@ async function addGroupMember({
     await requireGroupRole({
         groupId,
         userId: senderUserId,
-        allowedRoles: ['owner', 'admin'],
+        allowedRoles: GROUP_ROLE_PERMISSIONS.CAN_MANAGE_MEMBERS,
         session
     });
 
     // Optional MVP rule: do not allow adding another Owner
-    if (role === 'owner') {
+    if (role === GROUP_ROLES.OWNER) {
         throw createHttpError('Cannot add a new member as Owner', 400);
     }
 
@@ -257,5 +258,6 @@ module.exports = {
     getUserGroups, 
     getGroupById,
     updateGroup, 
-    deleteGroup
+    deleteGroup, 
+    addGroupMember
 };
