@@ -7,6 +7,7 @@ const { validateObjectId, validateRatingInput, validateObjectIdArray, validateAr
 const { getAvgRating } = require('../utils/ratingUtils');
 const { createHttpError } = require('../utils/errorUtils');
 const { requireGroupMember } = require('./groupPermissionService');
+const { CONSENSUS_SOURCES, CONSENSUS_SOURCE_VALUES } = require('../constants/consensusSource');
 /**
  * createRestaurantReviewWithFirstEntry
  * Creates a restaurant review with a first entry
@@ -52,7 +53,7 @@ async function createRestaurantReviewWithFirstEntry({
                     valueRating: userRating.valueRating,
                     overallRating: userRating.overallRating
                 },
-                consensusSource: 'entry_average',
+                consensusSource: CONSENSUS_SOURCES.AVERAGE,
                 consensusUpdatedBy: userId,
                 consensusUpdatedAt: new Date(),
                 tagIds,
@@ -131,7 +132,7 @@ async function getRestaurantReviewById({ restaurantReviewId, userId }) {
  */
 async function recalcRestaurantReviewConsensus({ restaurantReview, updatedByUserId, session = null }) {
     // Confirm consensus source is entry_average before recalculating, otherwise skip
-    if (restaurantReview.consensusSource !== 'entry_average') {
+    if (restaurantReview.consensusSource !== CONSENSUS_SOURCES.AVERAGE) {
         return restaurantReview;
     }
 
@@ -395,7 +396,7 @@ async function updateRestaurantReview({
     // Validate optional fields
     if (tagIds !== undefined) { validateObjectIdArray(tagIds, 'tagIds'); }
     if (consensusRating !== undefined) { validateRatingInput(consensusRating, 'consensusRating'); }
-    if (consensusSource !== undefined && !['entry_average', 'manual'].includes(consensusSource)) {
+    if (consensusSource !== undefined && !CONSENSUS_SOURCE_VALUES.includes(consensusSource)) {
         throw createHttpError('Invalid consensusSource', 400);
     }
 
@@ -422,12 +423,12 @@ async function updateRestaurantReview({
     }
 
     // Reject edge case: Conflict from setting 'entry_average' + consensusRating changes
-    if (consensusRating !== undefined && consensusSource === 'entry_average') {
+    if (consensusRating !== undefined && consensusSource === CONSENSUS_SOURCES.AVERAGE) {
         throw createHttpError('Cannot provide consensusRating when resetting consensusSource to entry_average', 400);
     }
 
     // Reject edge case: Setting 'manual', but with no consensusRating provided
-    if (consensusSource === 'manual' && consensusRating === undefined) {
+    if (consensusSource === CONSENSUS_SOURCES.MANUAL && consensusRating === undefined) {
         throw createHttpError('consensusRating is required when setting consensusSource to manual', 400);
     }
 
@@ -439,14 +440,14 @@ async function updateRestaurantReview({
     // Update with new consensus rating if provided
     if (consensusRating !== undefined) {
         restaurantReview.consensusRating = consensusRating;
-        restaurantReview.consensusSource = 'manual';
+        restaurantReview.consensusSource = CONSENSUS_SOURCES.MANUAL;
         restaurantReview.consensusUpdatedBy = userId;
         restaurantReview.consensusUpdatedAt = new Date();
     }
 
     // If consensusSource is explicitly specified, do ratings recalculation
-    if (consensusSource === 'entry_average') {
-        restaurantReview.consensusSource = 'entry_average';
+    if (consensusSource === CONSENSUS_SOURCES.AVERAGE) {
+        restaurantReview.consensusSource = CONSENSUS_SOURCES.AVERAGE;
 
         const updatedRestaurantReview = await recalcRestaurantReviewConsensus({
             restaurantReview,
