@@ -249,5 +249,48 @@ module.exports = {
             // Catch-all error
             return res.status(500).json({ error: 'Failed to get group members' });
         }
+    },
+    updateGroupMemberRole: async (req, res) => {
+    const session = await mongoose.startSession();
+    try {
+        session.startTransaction();
+
+        const { groupId, userId } = req.params;
+        const { role } = req.body || {};
+
+        // Attempt update group member role
+        const result = await groupService.updateGroupMemberRole({
+            groupId,
+            senderUserId: req.userId,
+            receiverUserId: userId,
+            role,
+            session
+        });
+
+        await session.commitTransaction();
+
+        return res.status(200).json(result);
+    } catch (err) {
+        // Abort transaction and log error
+        await session.abortTransaction();
+        console.error(err);
+
+        // Custom HTTP error from service
+        if (err.statusCode) {
+            return res.status(err.statusCode).json({ error: err.message });
+        }
+
+        // Mongoose validation / cast error
+        if (err.name === 'ValidationError' || err.name === 'CastError') {
+            return res.status(400).json({ error: err.message });
+        }
+
+        // Catch-all error
+        return res.status(500).json({
+            error: 'Failed to update group member role'
+        });
+    } finally {
+        session.endSession();
     }
+}
 };
