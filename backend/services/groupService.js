@@ -253,11 +253,45 @@ async function addGroupMember({
     };
 }
 
+/**
+ * getGroupMembers
+ * Gets all members of a group if the current user is a member.
+ */
+async function getGroupMembers({ groupId, userId }) {
+    // Validate IDs
+    validateObjectId(groupId, 'groupId');
+    validateObjectId(userId, 'userId');
+
+    // Confirm group exists
+    const group = await Group.findById(groupId);
+    if (!group) {
+        throw createHttpError('Group not found', 404);
+    }
+
+    // Current user must be a member to view members
+    await requireGroupMember({
+        groupId,
+        userId
+    });
+
+    // Get all group members
+    const members = await GroupMember.find({ groupId })
+        .populate('userId', 'name email')
+        .populate('invitedBy', 'name email')
+        .sort({ role: 1, joinedAt: 1 }); // Sort ascending by role, then time they joined
+
+    return {
+        group,
+        members
+    };
+}
+
 module.exports = {
     createGroup, 
     getUserGroups, 
     getGroupById,
     updateGroup, 
     deleteGroup, 
-    addGroupMember
+    addGroupMember, 
+    getGroupMembers
 };
