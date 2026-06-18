@@ -171,5 +171,56 @@ module.exports = {
         } finally {
             session.endSession();
         }
+    },
+    addGroupMember: async (req, res) => {
+        const session = await mongoose.startSession();
+        try {
+            session.startTransaction();
+            
+            // Get required details
+            const { groupId } = req.params;
+            const { userId, role } = req.body || {};
+
+            // Attempt to add group member
+            const result = await groupService.addGroupMember({
+                groupId,
+                senderUserId: req.userId,
+                receiverUserId: userId,
+                role,
+                session
+            });
+
+            await session.commitTransaction();
+
+            return res.status(201).json(result);
+        } catch (err) {
+            // Abord transaction and log error
+            await session.abortTransaction();
+            console.error(err);
+
+            // Duplicate key error (member already part of group)
+            if (err.code === 11000) {
+                return res.status(409).json({
+                    error: 'User is already a member of this group'
+                });
+            }
+
+            // Custom HTTP error message from service
+            if (err.statusCode) {
+                return res.status(err.statusCode).json({ error: err.message });
+            }
+
+            // Mongoose validation / cast error
+            if (err.name === 'ValidationError' || err.name === 'CastError') {
+                return res.status(400).json({ error: err.message });
+            }
+
+            // Catch-all for other errors
+            return res.status(500).json({
+                error: 'Failed to add group member'
+            });
+        } finally {
+            session.endSession();
+        }
     }
 };

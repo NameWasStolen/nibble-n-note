@@ -17,6 +17,7 @@ router.patch('/:id', authMiddleware, groupController.updateGroup);
 // DELETE /api/groups/:id
 router.delete('/:id', authMiddleware, groupController.deleteGroup)
 // POST /api/groups/:groupId/members
+router.post('/:groupId/members', authMiddleware, groupController.addGroupMember);
 // GET /api/groups/:groupId/members
 // PATCH /api/groups/:groupId/members/:userId
 // DELETE /api/groups/:groupId/members/:userId
