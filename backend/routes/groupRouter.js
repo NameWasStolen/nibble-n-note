@@ -23,5 +23,6 @@ router.get('/:groupId/members', authMiddleware, groupController.getGroupMembers)
 // PATCH /api/groups/:groupId/members/:userId
 router.patch('/:groupId/members/:userId', authMiddleware, groupController.updateGroupMemberRole);
 // DELETE /api/groups/:groupId/members/:userId
+router.delete('/:groupId/members/:userId', authMiddleware, groupController.deleteGroupMember);
 
 module.exports = router;
