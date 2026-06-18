@@ -286,6 +286,77 @@ async function getGroupMembers({ groupId, userId }) {
     };
 }
 
+/**
+ * updateGroupMemberRole
+ * Updates a group member's role.
+ */
+async function updateGroupMemberRole({
+    groupId,
+    senderUserId,
+    receiverUserId,
+    role,
+    session = null
+}) {
+    // Validate IDs
+    validateObjectId(groupId, 'groupId');
+    validateObjectId(senderUserId, 'senderUserId');
+    validateObjectId(receiverUserId, 'userId');
+
+    // Validate role
+    if (role === undefined) {
+        throw createHttpError('role is required', 400);
+    }
+    if (!GROUP_ROLE_VALUES.includes(role)) {
+        throw createHttpError('Invalid group member role', 400);
+    }
+
+    // Find group
+    const group = await Group.findById(groupId).session(session);
+    if (!group) {
+        throw createHttpError('Group not found', 404);
+    }
+
+    // Only Owner/Admin can manage members
+    await requireGroupRole({
+        groupId,
+        userId: senderUserId,
+        allowedRoles: GROUP_ROLE_PERMISSIONS.CAN_MANAGE_MEMBERS,
+        session
+    });
+
+    // Do not allow users to change their own role
+    if (senderUserId.toString() === receiverUserId.toString()) {
+        throw createHttpError('You cannot change your own role', 400);
+    }
+
+    // MVP rule: do not allow assigning Owner
+    if (role === GROUP_ROLES.OWNER) {
+        throw createHttpError('Cannot update a member role to Owner', 400);
+    }
+
+    // Find target membership
+    const targetMembership = await GroupMember.findOne({
+        groupId,
+        userId: receiverUserId
+    }).session(session);
+    if (!targetMembership) {
+        throw createHttpError('Group member not found', 404);
+    }
+
+    // MVP rule: do not allow changing the Owner's role
+    if (targetMembership.role === GROUP_ROLES.OWNER) {
+        throw createHttpError('Cannot change the group owner role', 400);
+    }
+
+    // Apply update
+    targetMembership.role = role;
+    await targetMembership.save({ session });
+
+    return {
+        groupMember: targetMembership
+    };
+}
+
 module.exports = {
     createGroup, 
     getUserGroups, 
@@ -293,5 +364,6 @@ module.exports = {
     updateGroup, 
     deleteGroup, 
     addGroupMember, 
-    getGroupMembers
+    getGroupMembers,
+    updateGroupMemberRole
 };
