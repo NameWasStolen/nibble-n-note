@@ -3,7 +3,7 @@ const TAG_CATEGORIES = Object.freeze({
     DISH: "Dish"
 })
 
-const TAG_CATEGORY_SOURCE = Object.freeze(Object.values(CONSENSUS_SOURCES))
+const TAG_CATEGORY_SOURCE = Object.freeze(Object.values(TAG_CATEGORIES))
 
 module.exports = {
     TAG_CATEGORIES,
