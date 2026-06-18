@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { BUSINESS_STATUS_VALUES } = require('../constants/businessStatus');
 
 const locationSchema = new mongoose.Schema({
     placeId: {
@@ -20,7 +21,7 @@ const locationSchema = new mongoose.Schema({
     },
     businessStatus: {
         type: String,
-        enum: ['OPERATIONAL', 'CLOSED_TEMPORARILY', 'CLOSED_PERMANENTLY'],
+        enum: BUSINESS_STATUS_VALUES,
         default: null
     },
     price:{
