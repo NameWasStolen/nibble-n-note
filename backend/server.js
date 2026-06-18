@@ -20,6 +20,7 @@ const userRouter = require('./routes/userRouter.js');
 const locationRouter = require('./routes/locationRoute.js');
 const restaurantReviewRouter = require('./routes/restaurantReviewRouter.js');
 const restaurantReviewEntryRouter = require('./routes/restaurantReviewEntryRouter.js');
+const groupRouter = require('./routes/groupRouter.js')
 
 // Setting Routers
 // Authentication-related routes
@@ -32,6 +33,8 @@ app.use('/api/locations', locationRouter);
 app.use('/api/restaurant-reviews', restaurantReviewRouter);
 // Restaurant Review Entry-related routes
 app.use('/api/restaurant-review-entries', restaurantReviewEntryRouter);
+// Group-related routes
+app.use('/api/groups', groupRouter);
 // Test route
 app.get('/ping', (req, res) => 
     res.send('pong')

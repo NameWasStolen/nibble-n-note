@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const ratingSchema = require('./subschemas/ratingSchema');
+const { CONSENSUS_SOURCES, CONSENSUS_SOURCE_VALUES } = require('../constants/consensusSource');
 
 const restaurantReviewSchema = new mongoose.Schema(
     {
@@ -24,8 +25,8 @@ const restaurantReviewSchema = new mongoose.Schema(
         },
         consensusSource: {
             type: String,
-            enum: ['entry_average', 'manual'],
-            default: 'entry_average',
+            enum: CONSENSUS_SOURCE_VALUES,
+            default: CONSENSUS_SOURCES.AVERAGE,
             required: true
         },
         consensusUpdatedBy: {

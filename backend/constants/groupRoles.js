@@ -1,0 +1,19 @@
+const GROUP_ROLES = Object.freeze({
+    OWNER: 'Owner',
+    ADMIN: 'Admin',
+    MEMBER: 'Member'
+});
+
+const GROUP_ROLE_VALUES = Object.freeze(Object.values(GROUP_ROLES));
+
+const GROUP_ROLE_PERMISSIONS = Object.freeze({
+    CAN_MANAGE_GROUP: [GROUP_ROLES.OWNER, GROUP_ROLES.ADMIN],
+    CAN_DELETE_GROUP: [GROUP_ROLES.OWNER],
+    CAN_MANAGE_MEMBERS: [GROUP_ROLES.OWNER, GROUP_ROLES.ADMIN]
+});
+
+module.exports = {
+    GROUP_ROLES,
+    GROUP_ROLE_VALUES,
+    GROUP_ROLE_PERMISSIONS
+};
