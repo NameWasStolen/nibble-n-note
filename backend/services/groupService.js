@@ -192,6 +192,66 @@ async function deleteGroup({
     };
 }
 
+/**
+ * addGroupMember
+ * Adds a user to a group.
+ */
+async function addGroupMember({
+    groupId,
+    senderUserId,
+    receiverUserId,
+    role = 'member',
+    session = null
+}) {
+    // Validate IDs
+    validateObjectId(groupId, 'groupId');
+    validateObjectId(senderUserId, 'senderUserId');
+    validateObjectId(receiverUserId, 'receiverUserId');
+
+    // Validate role
+    if (!['owner', 'admin', 'member'].includes(role)) {
+        throw createHttpError('Invalid group member role', 400);
+    }
+
+    // Find group
+    const group = await Group.findById(groupId).session(session);
+    if (!group) {
+        throw createHttpError('Group not found', 404);
+    }
+
+    // Only Owner/Admin can add members
+    await requireGroupRole({
+        groupId,
+        userId: senderUserId,
+        allowedRoles: ['owner', 'admin'],
+        session
+    });
+
+    // Optional MVP rule: do not allow adding another Owner
+    if (role === 'owner') {
+        throw createHttpError('Cannot add a new member as Owner', 400);
+    }
+
+    // Create group member
+    const groupMemberDocs = await GroupMember.create(
+        [
+            {
+                groupId,
+                userId: receiverUserId,
+                role,
+                invitedBy: senderUserId
+            }
+        ],
+        { session }
+    );
+
+    const groupMember = groupMemberDocs[0];
+
+    return {
+        groupMember
+    };
+}
+
 module.exports = {
     createGroup, 
     getUserGroups, 
