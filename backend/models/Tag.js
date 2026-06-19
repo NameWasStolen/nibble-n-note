@@ -41,7 +41,7 @@ const tagSchema = new mongoose.Schema(
 );
 
 // Mongoose middleware validator
-tagSchema.pre('validate', function (next) {
+tagSchema.pre('validate', function () {
     /* Ensure that exactly one of userId or groupId is set */
     // Convert user + group vals into boolean
     const hasUser = !!this.userId;

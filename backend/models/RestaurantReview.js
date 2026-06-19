@@ -57,7 +57,7 @@ const restaurantReviewSchema = new mongoose.Schema(
 );
 
 // Mongoose middleware validator
-restaurantReviewSchema.pre('validate', function (next) {
+restaurantReviewSchema.pre('validate', function () {
     /* Ensure exactly one of userId or groupId is set */
     // Convert user + group vals into boolean
     const hasUser = !!this.userId;
