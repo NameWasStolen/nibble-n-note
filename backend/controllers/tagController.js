@@ -57,5 +57,41 @@ module.exports = {
         } finally {
             session.endSession();
         }
-    }
+    },
+    getTags: async (req, res) => {
+        try {
+            const { groupId, category } = req.query || {};
+
+            // Attempt to search for Tags
+            const result = await tagService.getTags({
+                userId: req.userId,
+                groupId,
+                category
+            });
+
+            return res.status(200).json(result);
+        } catch (err) {
+            // Log error
+            console.error(err);
+
+            // Custom HTTP error from service
+            if (err.statusCode) {
+                return res.status(err.statusCode).json({
+                    error: err.message
+                });
+            }
+
+            // Mongoose validation / cast error
+            if (err.name === 'ValidationError' || err.name === 'CastError') {
+                return res.status(400).json({
+                    error: err.message
+                });
+            }
+
+            // Catch-all for all other errors
+            return res.status(500).json({
+                error: 'Failed to get tags'
+            });
+        }
+}
 };

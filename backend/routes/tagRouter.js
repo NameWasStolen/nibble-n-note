@@ -9,6 +9,7 @@ const router = express.Router();
 // POST /api/tags
 router.post('/', authMiddleware, tagController.createTag);
 // GET /api/tags
+router.get('/', authMiddleware, tagController.getTags);
 // PATCH /api/tags/:id
 // DELETE /api/tags/:id
 
