@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { TAG_CATEGORIES } = require('../constants/tagCategory');
+const { TAG_CATEGORY_VALUES } = require('../constants/tagCategory');
 
 const tagSchema = new mongoose.Schema(
     {
@@ -33,7 +33,7 @@ const tagSchema = new mongoose.Schema(
         },
         category: {
             type: String,
-            enum: TAG_CATEGORIES,
+            enum: TAG_CATEGORY_VALUES,
             required: true
         }
     },
