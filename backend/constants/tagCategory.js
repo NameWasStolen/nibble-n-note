@@ -7,5 +7,5 @@ const TAG_CATEGORY_VALUES = Object.freeze(Object.values(TAG_CATEGORIES))
 
 module.exports = {
     TAG_CATEGORIES,
-    TAG_CATEGORY_SOURCE
+    TAG_CATEGORY_VALUES
 }
