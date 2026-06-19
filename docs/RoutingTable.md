@@ -1,5 +1,5 @@
 # API Routing Table
-Last Updated: 08/06/2026
+Last Updated: 20/06/2026
 
 ## Notes
 
@@ -91,7 +91,7 @@ Last Updated: 08/06/2026
 
 | Method | Route | Auth | Purpose | Parameters | Success Response | Notes | Implemented? |
 |----------|----------|----------|----------|----------|----------|----------|----------|
-| POST | `/api/tags` | Yes | Create tag | `groupId?, name, colour?, category` | `201 Tag` | Personal or group tag | [ ] |
+| POST | `/api/tags` | Yes | Create tag | `groupId?, name, colour?, category` | `201 Tag` | Personal or group tag. Only 1 of userId or groupId is defined, based on if the Tag belongs to the user or group | [ ] |
 | GET | `/api/tags` | Yes | List tags | Query parameters | `200 Tag[]` | Filter by category/group | [ ] |
 | PATCH | `/api/tags/:id` | Yes | Update tag | `name?, colour?, category?` | `200 Tag` | Ownership required | [ ] |
 | DELETE | `/api/tags/:id` | Yes | Delete tag | `id` | `204 No Content` | Review references need consideration | [ ] |
