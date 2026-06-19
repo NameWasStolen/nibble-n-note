@@ -2,9 +2,9 @@ const Tag = require('../models/Tag');
 const Group = require('../models/Group');
 const { validateObjectId } = require('../utils/validators');
 const { createHttpError } = require('../utils/errorUtils');
-const { requireGroupRole } = require('./groupPermissionService');
 const { GROUP_ROLE_PERMISSIONS } = require('../constants/groupRoles');
 const { TAG_CATEGORY_VALUES } = require('../constants/tagCategory');
+const { requireGroupMember, requireGroupRole } = require('./groupPermissionService');
 
 /**
  * createTag
@@ -74,6 +74,69 @@ async function createTag({
     };
 }
 
+/**
+ * getTags
+ * Gets personal or group tags accessible to the current user.
+ */
+async function getTags({
+    userId,
+    groupId = null,
+    category
+}) {
+    // Validate user
+    validateObjectId(userId, 'userId');
+
+    // Validate category if provided
+    if (category !== undefined && category !== null) {
+        if (!TAG_CATEGORY_VALUES.includes(category)) {
+            throw createHttpError('Invalid tag category', 400);
+        }
+    }
+
+    // Prepare query for db search
+    const isGroupTagQuery = !!groupId;
+    const query = {};
+
+    // Add groupId and userId values to query for group / personal tag search
+    if (isGroupTagQuery) {
+        // Confirm groupId is valid
+        validateObjectId(groupId, 'groupId');
+
+        // Find if groupId exists
+        const group = await Group.findById(groupId);
+        if (!group) {
+            throw createHttpError('Group not found', 404);
+        }
+
+        // Any group member can view/use group tags
+        await requireGroupMember({
+            groupId,
+            userId
+        });
+
+        query.groupId = groupId;
+        query.userId = null;
+    } else {
+        // Personal tag query: only return tags owned by the current user
+        query.userId = userId;
+        query.groupId = null;
+    }
+
+    // If category was specified as param, add to query
+    if (category !== undefined && category !== null) {
+        query.category = category;
+    }
+
+    // Use query to find valid tags that match criteria
+    const tags = await Tag.find(query)
+        .sort({ category: 1, normalisedName: 1 });
+
+    return {
+        tags
+    };
+}
+
 module.exports = {
-    createTag
+    createTag,
+    getTags
 };
