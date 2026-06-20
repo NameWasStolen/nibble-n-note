@@ -5,6 +5,7 @@ const { createHttpError } = require('../utils/errorUtils');
 const { GROUP_ROLE_PERMISSIONS } = require('../constants/groupRoles');
 const { TAG_CATEGORY_VALUES } = require('../constants/tagCategory');
 const { requireGroupMember, requireGroupRole } = require('./groupPermissionService');
+const RestaurantReview = require('../models/RestaurantReview');
 
 /**
  * createTag
@@ -221,8 +222,64 @@ async function updateTag({
     };
 }
 
+/**
+ * deleteTag
+ * Deletes a personal or group tag.
+ */
+async function deleteTag({
+    tagId,
+    userId,
+    session = null
+}) {
+    // Validate IDs
+    validateObjectId(tagId, 'tagId');
+    validateObjectId(userId, 'userId');
+
+    // Find tag
+    const tag = await Tag.findById(tagId).session(session);
+    if (!tag) {
+        throw createHttpError('Tag not found', 404);
+    }
+
+    // Permission check
+    if (tag.groupId) {
+        // Group tag: only Owner/Admin can delete
+        await requireGroupRole({
+            groupId: tag.groupId,
+            userId,
+            allowedRoles: GROUP_ROLE_PERMISSIONS.CAN_DELETE_TAGS,
+            session
+        });
+    } else {
+        // Personal tag: only owner can delete
+        const isOwner = tag.userId.toString() === userId.toString();
+        if (!isOwner) {
+            throw createHttpError('You do not have permission to delete this tag', 403);
+        }
+    }
+
+    // Remove tag from restaurant reviews that reference it
+    await RestaurantReview.updateMany(
+        { tagIds: tag._id },
+        { $pull: { tagIds: tag._id } },
+        { session }
+    );
+
+    // TODO: Remove tag from dish reviews that reference it (when dishes are implemented)
+
+    // Delete tag
+    await Tag.deleteOne({
+        _id: tag._id
+    }).session(session);
+
+    return {
+        deletedTagId: tag._id
+    };
+}
+
 module.exports = {
     createTag,
     getTags,
-    updateTag
+    updateTag,
+    deleteTag
 };
