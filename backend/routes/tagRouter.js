@@ -11,6 +11,7 @@ router.post('/', authMiddleware, tagController.createTag);
 // GET /api/tags
 router.get('/', authMiddleware, tagController.getTags);
 // PATCH /api/tags/:id
+router.patch('/:id', authMiddleware, tagController.updateTag);
 // DELETE /api/tags/:id
 
 

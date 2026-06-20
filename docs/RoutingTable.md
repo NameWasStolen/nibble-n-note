@@ -93,7 +93,7 @@ Last Updated: 20/06/2026
 |----------|----------|----------|----------|----------|----------|----------|----------|
 | POST | `/api/tags` | Yes | Create tag | `groupId?, name, colour?, category` | `201 Tag` | Personal or group tag. Only 1 of userId or groupId is defined, based on if the Tag belongs to the user or group | ☑ |
 | GET | `/api/tags` | Yes | List accessible tags | `category?, groupId?` | `200 { tags: Tag[] }` | No `groupId` returns current user’s personal tags. With `groupId`, returns group tags if the user is a group member. Optional `category` filters by `Restaurant` or `Dish`. | ☑ |
-| PATCH | `/api/tags/:id` | Yes | Update tag | `name?, colour?, category?` | `200 Tag` | Ownership required | [ ] |
+| PATCH | `/api/tags/:id` | Yes | Update tag | `name?, colour?, category?` | `200 Tag` | Ownership required | ☑ |
 | DELETE | `/api/tags/:id` | Yes | Delete tag | `id` | `204 No Content` | Review references need consideration | [ ] |
 
 ---

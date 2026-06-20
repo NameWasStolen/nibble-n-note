@@ -93,5 +93,60 @@ module.exports = {
                 error: 'Failed to get tags'
             });
         }
-}
+    },
+    updateTag: async (req, res) => {
+        const session = await mongoose.startSession();
+        try {
+            session.startTransaction();
+
+            const { id } = req.params;
+            const { name, colour, category } = req.body || {};
+
+            // Attempt update on Tag
+            const result = await tagService.updateTag({
+                tagId: id,
+                userId: req.userId,
+                name,
+                colour,
+                category,
+                session
+            });
+
+            await session.commitTransaction();
+
+            return res.status(200).json(result);
+        } catch (err) {
+            // Abort transaction and log error
+            await session.abortTransaction();
+            console.error(err);
+
+            // Duplicate key error (existing entry)
+            if (err.code === 11000) {
+                return res.status(409).json({
+                    error: 'Tag already exists'
+                });
+            }
+
+            // Custom HTTP error from service
+            if (err.statusCode) {
+                return res.status(err.statusCode).json({
+                    error: err.message
+                });
+            }
+
+            // Mongoose validation / cast error
+            if (err.name === 'ValidationError' || err.name === 'CastError') {
+                return res.status(400).json({
+                    error: err.message
+                });
+            }
+
+            // Catch-all error for all other errors
+            return res.status(500).json({
+                error: 'Failed to update tag'
+            });
+        } finally {
+            session.endSession();
+        }
+    }
 };
