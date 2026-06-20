@@ -13,6 +13,7 @@ router.get('/', authMiddleware, tagController.getTags);
 // PATCH /api/tags/:id
 router.patch('/:id', authMiddleware, tagController.updateTag);
 // DELETE /api/tags/:id
+router.delete('/:id', authMiddleware, tagController.deleteTag);
 
 
 module.exports = router;

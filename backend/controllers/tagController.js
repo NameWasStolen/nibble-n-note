@@ -148,5 +148,49 @@ module.exports = {
         } finally {
             session.endSession();
         }
+    },
+    deleteTag: async (req, res) => {
+        const session = await mongoose.startSession();
+        try {
+            session.startTransaction();
+
+            const { id } = req.params;
+
+            // Attempt to delete tag
+            const result = await tagService.deleteTag({
+                tagId: id,
+                userId: req.userId,
+                session
+            });
+
+            await session.commitTransaction();
+
+            return res.status(200).json(result);
+        } catch (err) {
+            // Abort transaction and log error
+            await session.abortTransaction();
+            console.error(err);
+
+            // Custom HTTP status from service
+            if (err.statusCode) {
+                return res.status(err.statusCode).json({
+                    error: err.message
+                });
+            }
+
+            // Mongoose validation / cast error
+            if (err.name === 'ValidationError' || err.name === 'CastError') {
+                return res.status(400).json({
+                    error: err.message
+                });
+            }
+
+            // Catch-all for other errors
+            return res.status(500).json({
+                error: 'Failed to delete tag'
+            });
+        } finally {
+            session.endSession();
+        }
     }
 };
