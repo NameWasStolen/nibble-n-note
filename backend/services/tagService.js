@@ -136,7 +136,93 @@ async function getTags({
     };
 }
 
+/**
+ * updateTag
+ * Updates a personal or group tag.
+ */
+async function updateTag({
+    tagId,
+    userId,
+    name,
+    colour,
+    category,
+    session = null
+}) {
+    // Validate IDs
+    validateObjectId(tagId, 'tagId');
+    validateObjectId(userId, 'userId');
+
+    // Require at least one update field
+    if (
+        name === undefined &&
+        colour === undefined &&
+        category === undefined
+    ) {
+        throw createHttpError('At least one of name, colour, or category is required', 400);
+    }
+
+    // Validate name if provided
+    if (name !== undefined) {
+        if (typeof name !== 'string' || name.trim().length === 0) {
+            throw createHttpError('Tag name is required', 400);
+        }
+    }
+
+    // Validate category if provided
+    if (category !== undefined) {
+        if (!category) {
+            throw createHttpError('Tag category is required', 400);
+        }
+        if (!TAG_CATEGORY_VALUES.includes(category)) {
+            throw createHttpError('Invalid tag category', 400);
+        }
+    }
+
+    // Find tag
+    const tag = await Tag.findById(tagId).session(session);
+    if (!tag) {
+        throw createHttpError('Tag not found', 404);
+    }
+
+    // Permission check
+    if (tag.groupId) {
+        // Group tag: only Owner/Admin can update
+        await requireGroupRole({
+            groupId: tag.groupId,
+            userId,
+            allowedRoles: GROUP_ROLE_PERMISSIONS.CAN_MANAGE_TAGS,
+            session
+        });
+    } else {
+        // Personal tag: only owner can update
+        const isOwner = tag.userId.toString() === userId.toString();
+        if (!isOwner) {
+            throw createHttpError('You do not have permission to update this tag', 403);
+        }
+    }
+
+    // Apply updates
+    if (name !== undefined) {
+        tag.name = name.trim();
+    }
+
+    if (colour !== undefined) {
+        tag.colour = colour;
+    }
+
+    if (category !== undefined) {
+        tag.category = category;
+    }
+
+    await tag.save({ session });
+
+    return {
+        tag
+    };
+}
+
 module.exports = {
     createTag,
-    getTags
+    getTags,
+    updateTag
 };
