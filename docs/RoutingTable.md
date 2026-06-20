@@ -50,9 +50,12 @@ Last Updated: 20/06/2026
 | Method | Route | Auth | Purpose | Parameters | Success Response | Notes | Implemented? |
 |----------|----------|----------|----------|----------|----------|----------|----------|
 | POST | `/api/restaurant-reviews` | Yes | Create restaurant review container | `locationId, groupId?, consensusRating, consensusSource, consensusUpdatedAt, consensusUpdatedBy, tagIds?` | `201 RestaurantReview` | Personal if no groupId | ☑ |
+| GET | `/api/restaurant-reviews` | Yes | List/search restaurant reviews | `groupId?, search?, tagId?, sort?, page?, limit?` | `200 { restaurantReviews: RestaurantReview[], pagination: {...} }` | Personal reviews by default; group reviews if `groupId` is provided. Supports optional text search, tag filtering, sorting, and pagination. Access control required. | ☐ |
 | GET | `/api/restaurant-reviews/:id` | Yes | Get restaurant review | `id` | `200 RestaurantReview` | Access control required | ☑ |
 | PATCH | `/api/restaurant-reviews/:id` | Yes | Update review container | `consensusRating?, consensusSource, tagIds?` | `200 RestaurantReview` | Owner/Admin permissions | ☑ |
 | DELETE | `/api/restaurant-reviews/:id` | Yes | Delete review container | `id` | `204 No Content` | Decide cascade delete behaviour | ☑ |
+| GET | `/api/restaurant-reviews/suggestions` | Yes | Get restaurant review search suggestions | `groupId?, search, limit?` | `200 { suggestions: ReviewSuggestion[] }` | Returns reviewed locations matching search text within personal scope by default, or group scope if `groupId` is provided. Access control required. | ☐ |
+
 
 ---
 
