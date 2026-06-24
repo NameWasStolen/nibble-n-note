@@ -16,13 +16,13 @@ function escapeRegExp(value) {
  * the number of documents to skip for database pagination.
  */
 function getPaginationValues({ page, limit, defaultLimit = 20, maxLimit = 50, maxPage = 1000 }) {
-    const parsedPage  = Number(page);
+    const parsedPage = Number(page);
     const parsedLimit = Number(limit);
 
     const safeDefaultLimit = Math.min(defaultLimit, maxLimit);
 
-     // Default page number to page 1, if page is missing / invalid / < 1
-    const safePage  = Number.isSafeInteger(parsedPage)  && parsedPage  > 0
+    // Defaults to page 1 if page is missing, invalid, or less than 1
+    const safePage = Number.isSafeInteger(parsedPage)  && parsedPage  > 0
         ? Math.min(parsedPage, maxPage)
         : 1;
 
