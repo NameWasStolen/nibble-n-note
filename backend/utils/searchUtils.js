@@ -15,20 +15,26 @@ function escapeRegExp(value) {
  * applies sensible defaults, caps the maximum limit, and calculates
  * the number of documents to skip for database pagination.
  */
-function getPaginationValues({ page, limit, defaultLimit = 20, maxLimit = 50 }) {
-    const parsedPage = Number(page);
+function getPaginationValues({ page, limit, defaultLimit = 20, maxLimit = 50, maxPage = 1000 }) {
+    const parsedPage  = Number(page);
     const parsedLimit = Number(limit);
 
-    // Default page number to page 1, if page is missing / invalid / < 1
-    const safePage = Number.isInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+    const safeDefaultLimit = Math.min(defaultLimit, maxLimit);
+
+     // Default page number to page 1, if page is missing / invalid / < 1
+    const safePage  = Number.isSafeInteger(parsedPage)  && parsedPage  > 0
+        ? Math.min(parsedPage, maxPage)
+        : 1;
 
     // Default item limit if missing / invalid, and cap to prevent excessive query size
-    const safeLimit = Number.isInteger(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, maxLimit) : defaultLimit;
+    const safeLimit = Number.isSafeInteger(parsedLimit) && parsedLimit > 0
+        ? Math.min(parsedLimit, maxLimit)
+        : safeDefaultLimit;
 
     return {
-        page: safePage,
+        page:  safePage,
         limit: safeLimit,
-        skip: (safePage - 1) * safeLimit
+        skip:  (safePage - 1) * safeLimit,
     };
 }
 
