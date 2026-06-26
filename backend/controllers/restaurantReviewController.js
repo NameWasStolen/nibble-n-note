@@ -195,5 +195,38 @@ module.exports = {
         } finally {
             session.endSession();
         }
+    },
+    getRestaurantReviews: async (req, res) => {
+        try {
+            const { groupId, search, tagId, sort, page, limit } = req.query || {};
+
+            const result = await restaurantReviewService.getRestaurantReviews({
+                userId: req.userId,
+                groupId,
+                search,
+                tagId,
+                sort,
+                page,
+                limit
+            });
+
+            return res.status(200).json(result);
+        } catch (err) {
+            // Log error
+            console.error(err);
+
+            // Custom HTTP error thrown by service
+            if (err.statusCode) {
+                return res.status(err.statusCode).json({ error: err.message });
+            }
+
+            // Mongoose validation / cast error
+            if (err.name === 'ValidationError' || err.name === 'CastError') {
+                return res.status(400).json({ error: err.message });
+            }
+
+            // Catch-all for all other errors
+            return res.status(500).json({ error: 'Failed to get restaurant reviews' });
+        }
     }
 }
