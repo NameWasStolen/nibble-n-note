@@ -8,6 +8,10 @@ const { getAvgRating } = require('../utils/ratingUtils');
 const { createHttpError } = require('../utils/errorUtils');
 const { requireGroupMember } = require('./groupPermissionService');
 const { CONSENSUS_SOURCES, CONSENSUS_SOURCE_VALUES } = require('../constants/consensusSource');
+const mongoose = require('mongoose');
+const { escapeRegExp, getPaginationValues } = require('../utils/searchUtils');
+const Group = require('../models/Group');
+
 /**
  * createRestaurantReviewWithFirstEntry
  * Creates a restaurant review with a first entry
@@ -514,6 +518,39 @@ async function deleteRestaurantReview({
     return {
         deletedRestaurantReviewId: restaurantReview._id
     };
+}
+
+/**
+ * getRestaurantReviewSort
+ * Helper function to provide sort criteria for database query.
+ */
+function getRestaurantReviewSort(sort) {
+    switch (sort) {
+        case 'updated_asc':
+            return { updatedAt: 1 };
+
+        case 'created_desc':
+            return { createdAt: -1 };
+
+        case 'created_asc':
+            return { createdAt: 1 };
+
+        case 'rating_desc':
+            return { 'consensusRating.overallRating': -1, updatedAt: -1 };
+
+        case 'rating_asc':
+            return { 'consensusRating.overallRating': 1, updatedAt: -1 };
+
+        case 'name_asc':
+            return { 'location.name': 1 };
+
+        case 'name_desc':
+            return { 'location.name': -1 };
+
+        case 'updated_desc':
+        default:
+            return { updatedAt: -1 };
+    }
 }
 
 module.exports = {
