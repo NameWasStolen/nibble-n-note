@@ -38,7 +38,33 @@ function getPaginationValues({ page, limit, defaultLimit = 20, maxLimit = 50, ma
     };
 }
 
+/**
+ * getTagIdsFromQuery
+ * Converts a tagIds query param into a clean deduplicated array of string IDs.
+ *
+ * Handles comma-separated values, e.g. ?tagIds=abc,def
+ */
+function getTagIdsFromQuery(tagIds = null) {
+    // No tag filter provided
+    if (!tagIds) return [];
+
+    // Express may provide query params as a string or array, so normalise to array
+    const tagIdsArray = Array.isArray(tagIds) ? tagIds : [tagIds];
+
+    // Support comma-separated values, e.g. "tag1,tag2,tag3"
+    const rawTagIds = [];
+    tagIdsArray.forEach((value) => {
+        if (typeof value === 'string') {
+            rawTagIds.push(...value.split(','));
+        }
+    });
+
+    // Trim whitespace, remove empty values, and remove duplicates
+    return [...new Set(rawTagIds.map((id) => id.trim()).filter(Boolean))];
+}
+
 module.exports = {
     escapeRegExp,
-    getPaginationValues
+    getPaginationValues,
+    getTagIdsFromQuery
 };

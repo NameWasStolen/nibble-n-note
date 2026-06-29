@@ -277,9 +277,62 @@ async function deleteTag({
     };
 }
 
+/**
+ * validateAccessibleTagIds
+ * Validates that all provided tag IDs exist, belong to the correct personal/group scope,
+ * and match the required tag category.
+ *
+ * Returns an array of ObjectIds ready for use in a MongoDB query.
+ */
+async function validateAccessibleTagIds({
+    tagIds,
+    userId,
+    groupId = null,
+    category,
+    session = null
+}) {
+    // No tag filter provided
+    if (!Array.isArray(tagIds) || tagIds.length === 0) return [];
+
+    if (!category) {
+        throw createHttpError('Tag category is required', 400);
+    }
+
+    // Validate each tag ID format and convert strings to ObjectIds
+    tagIds.forEach((tagId) => validateObjectId(tagId, 'tagId'));
+    const objectTagIds = tagIds.map((tagId) => new mongoose.Types.ObjectId(tagId));
+
+    // Build scope-specific tag query: personal tags by default, group tags if groupId is provided
+    const tagQuery = groupId
+        ? {
+            _id: { $in: objectTagIds },
+            groupId,
+            userId: null,
+            category
+        }
+        : {
+            _id: { $in: objectTagIds },
+            userId,
+            groupId: null,
+            category
+        };
+
+    // Confirm all requested tags belong to the current personal/group scope and required category
+    const tags = await Tag.find(tagQuery)
+        .select('_id')
+        .session(session);
+
+    if (tags.length !== objectTagIds.length) {
+        throw createHttpError('One or more tags were not found', 404);
+    }
+
+    return objectTagIds;
+}
+
 module.exports = {
     createTag,
     getTags,
     updateTag,
-    deleteTag
+    deleteTag,
+    validateAccessibleTagIds
 };
