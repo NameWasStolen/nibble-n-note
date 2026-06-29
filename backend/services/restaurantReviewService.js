@@ -9,8 +9,10 @@ const { createHttpError } = require('../utils/errorUtils');
 const { requireGroupMember } = require('./groupPermissionService');
 const { CONSENSUS_SOURCES, CONSENSUS_SOURCE_VALUES } = require('../constants/consensusSource');
 const mongoose = require('mongoose');
-const { escapeRegExp, getPaginationValues } = require('../utils/searchUtils');
+const { escapeRegExp, getPaginationValues, getTagIdsFromQuery } = require('../utils/searchUtils');
 const Group = require('../models/Group');
+const { TAG_CATEGORIES } = require('../constants/tagCategory');
+const { validateAccessibleTagIds } = require('./tagService');
 
 /**
  * createRestaurantReviewWithFirstEntry
@@ -561,7 +563,7 @@ async function getRestaurantReviews({
     userId,
     groupId = null,
     search = '',
-    tagId = null,
+    tagIds = null, 
     sort = 'updated_desc',
     page = 1,
     limit = 20
@@ -597,21 +599,17 @@ async function getRestaurantReviews({
         match.groupId = null;
     }
 
-    if (tagId) {
-        validateObjectId(tagId, 'tagId');
+    // Ensure the tag exists in the same personal/group scope being searched
+    // Build query to search for tag + personal/group scope
+    const accessibleTagObjectIds = await validateAccessibleTagIds({
+        tagIds: getTagIdsFromQuery(tagIds),
+        userId,
+        groupId,
+        category: TAG_CATEGORIES.RESTAURANT
+    });
 
-        // Ensure the tag exists in the same personal/group scope being searched
-        // Build query to search for tag + personal/group scope
-        const tagQuery = isGroupQuery
-            ? { _id: tagId, groupId, userId: null } // group scope
-            : { _id: tagId, userId, groupId: null }; // personal scope
-
-        const tag = await Tag.findOne(tagQuery);
-        if (!tag) {
-            throw createHttpError('Tag not found', 404);
-        }
-
-        match.tagIds = new mongoose.Types.ObjectId(tagId);
+    if (accessibleTagObjectIds.length > 0) {
+        match.tagIds = { $all: accessibleTagObjectIds };
     }
 
     // Format search value

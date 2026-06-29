@@ -198,13 +198,13 @@ module.exports = {
     },
     getRestaurantReviews: async (req, res) => {
         try {
-            const { groupId, search, tagId, sort, page, limit } = req.query || {};
+            const { groupId, search, tagIds, sort, page, limit } = req.query || {};
 
             const result = await restaurantReviewService.getRestaurantReviews({
                 userId: req.userId,
                 groupId,
                 search,
-                tagId,
+                tagIds,
                 sort,
                 page,
                 limit
