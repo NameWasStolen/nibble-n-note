@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Tag = require('../models/Tag');
 const Group = require('../models/Group');
 const { validateObjectId } = require('../utils/validators');
