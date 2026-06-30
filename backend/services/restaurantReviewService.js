@@ -8,6 +8,12 @@ const { getAvgRating } = require('../utils/ratingUtils');
 const { createHttpError } = require('../utils/errorUtils');
 const { requireGroupMember } = require('./groupPermissionService');
 const { CONSENSUS_SOURCES, CONSENSUS_SOURCE_VALUES } = require('../constants/consensusSource');
+const mongoose = require('mongoose');
+const { escapeRegExp, getPaginationValues, getTagIdsFromQuery } = require('../utils/searchUtils');
+const Group = require('../models/Group');
+const { TAG_CATEGORIES } = require('../constants/tagCategory');
+const { validateAccessibleTagIds } = require('./tagService');
+
 /**
  * createRestaurantReviewWithFirstEntry
  * Creates a restaurant review with a first entry
@@ -516,6 +522,218 @@ async function deleteRestaurantReview({
     };
 }
 
+/**
+ * getRestaurantReviewSort
+ * Helper function to provide sort criteria for database query.
+ */
+function getRestaurantReviewSort(sort) {
+    switch (sort) {
+        case 'updated_asc':
+            return { updatedAt: 1 };
+
+        case 'created_desc':
+            return { createdAt: -1 };
+
+        case 'created_asc':
+            return { createdAt: 1 };
+
+        case 'rating_desc':
+            return { 'consensusRating.overallRating': -1, updatedAt: -1 };
+
+        case 'rating_asc':
+            return { 'consensusRating.overallRating': 1, updatedAt: -1 };
+
+        case 'name_asc':
+            return { 'location.name': 1 };
+
+        case 'name_desc':
+            return { 'location.name': -1 };
+
+        case 'updated_desc':
+        default:
+            return { updatedAt: -1 };
+    }
+}
+
+/**
+ * getRestaurantReviews
+ * Lists/searches personal or group restaurant reviews accessible to the current user.
+ */
+async function getRestaurantReviews({
+    userId,
+    groupId = null,
+    search = '',
+    tagIds = null, 
+    sort = 'updated_desc',
+    page = 1,
+    limit = 20
+}) {
+    // Validate current user
+    validateObjectId(userId, 'userId');
+
+    // Check if group or individual request
+    const isGroupQuery = !!groupId;
+
+    // Create object to be used for database search, according to user-provided parameters
+    const match = {};
+
+    if (isGroupQuery) {
+        // Group search/listing: user must be a member of the group
+        validateObjectId(groupId, 'groupId');
+
+        const group = await Group.findById(groupId);
+        if (!group) {
+            throw createHttpError('Group not found', 404);
+        }
+
+        await requireGroupMember({
+            groupId,
+            userId
+        });
+
+        match.groupId = new mongoose.Types.ObjectId(groupId);
+        match.userId = null;
+    } else {
+        // Personal search/listing: only current user's personal reviews
+        match.userId = new mongoose.Types.ObjectId(userId);
+        match.groupId = null;
+    }
+
+    // Ensure the tag exists in the same personal/group scope being searched
+    // Build query to search for tag + personal/group scope
+    const accessibleTagObjectIds = await validateAccessibleTagIds({
+        tagIds: getTagIdsFromQuery(tagIds),
+        userId,
+        groupId,
+        category: TAG_CATEGORIES.RESTAURANT
+    });
+
+    if (accessibleTagObjectIds.length > 0) {
+        match.tagIds = { $all: accessibleTagObjectIds };
+    }
+
+    // Format search value
+    const trimmedSearch = typeof search === 'string' ? search.trim() : '';
+
+    // Get pagination values from provided page, limits and entry skips
+    const {
+        page: safePage,
+        limit: safeLimit,
+        skip
+    } = getPaginationValues({
+        page,
+        limit
+    });
+
+    // Build pipeline for the database search
+    const pipeline = [
+        {
+            $match: match // Look for restaurant reviews with matching user/group Id and tag Ids
+        },
+        { // Join RestaurantReview with Location, based on RestaurantReview's locationId and Location's _id
+            $lookup: {
+                from: 'locations',
+                localField: 'locationId',
+                foreignField: '_id',
+                as: 'location'
+            }
+        },
+        { // Turns "location" that was joined, from an array -> object (as should only be 1 location for each RestaurantReview)
+            $unwind: '$location'
+        }
+    ];
+
+    // Push to pipeline: Filter for RestuarantReviews with name / address that match search text input, if provided
+    if (trimmedSearch.length > 0) {
+        const escapedSearch = escapeRegExp(trimmedSearch);
+
+        pipeline.push({
+            $match: {
+                $or: [ // Match name or address, to provided search input
+                    {
+                        'location.name': {
+                            $regex: escapedSearch,
+                            $options: 'i' // Case insensitive
+                        }
+                    },
+                    {
+                        'location.address': {
+                            $regex: escapedSearch,
+                            $options: 'i'
+                        }
+                    }
+                ]
+            }
+        });
+    }
+
+    // Push to pipeline: database commands to sort and retrieve results
+    pipeline.push(
+        {
+            $sort: getRestaurantReviewSort(sort) // Sort reviews based on provided means (e.g. updated_asc)
+        },
+        {
+            $facet: { // Run 2 pipelines in the same time: list of RestaurantReview at provided page num + size, and total number of matching RestaurantReview entries
+                restaurantReviews: [
+                    {
+                        $skip: skip // Number of reviews to skip ((page num - 1) * page limit)
+                    },
+                    {
+                        $limit: safeLimit // Limit number of reviews by safeLimit (the max num of entries in a page)
+                    },
+                    {
+                        // Taking relevant page details
+                        $project: {
+                            _id: 1,
+                            locationId: 1,
+                            userId: 1,
+                            groupId: 1,
+                            consensusRating: 1,
+                            consensusSource: 1,
+                            consensusUpdatedBy: 1,
+                            consensusUpdatedAt: 1,
+                            tagIds: 1,
+                            createdByUserId: 1,
+                            createdAt: 1,
+                            updatedAt: 1,
+                            location: {
+                                _id: '$location._id',
+                                placeId: '$location.placeId',
+                                name: '$location.name',
+                                address: '$location.address',
+                                businessStatus: '$location.businessStatus',
+                                price: '$location.price',
+                                coord: '$location.coord'
+                            }
+                        }
+                    }
+                ],
+                totalCount: [
+                    {
+                        $count: 'count'
+                    }
+                ]
+            }
+        }
+    );
+
+    // Run pipeline to retrieve search results
+    const results = await RestaurantReview.aggregate(pipeline);
+
+    const restaurantReviews = results[0]?.restaurantReviews || [];
+    const total = results[0]?.totalCount?.[0]?.count || 0;
+
+    return {
+        restaurantReviews,
+        pagination: {
+            page: safePage,
+            limit: safeLimit,
+            total,
+            totalPages: Math.ceil(total / safeLimit)
+        }
+    };
+}
+
 module.exports = {
     createRestaurantReviewWithFirstEntry,
     getRestaurantReviewById,
@@ -524,5 +742,6 @@ module.exports = {
     updateRestaurantReviewEntry,
     deleteRestaurantReviewEntry,
     updateRestaurantReview,
-    deleteRestaurantReview
+    deleteRestaurantReview,
+    getRestaurantReviews
 };

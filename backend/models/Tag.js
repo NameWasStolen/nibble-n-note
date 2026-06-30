@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { TAG_CATEGORIES } = require('../constants/tagCategory');
+const { TAG_CATEGORY_VALUES } = require('../constants/tagCategory');
 
 const tagSchema = new mongoose.Schema(
     {
@@ -30,10 +30,40 @@ const tagSchema = new mongoose.Schema(
             type: String,
             trim: true,
             default: null,
+            set: function (value) {
+                // Ensure values are the trimmed string or null
+                if (value === undefined || value === null) {
+                    return null;
+                }
+
+                if (typeof value !== 'string') {
+                    return value;
+                }
+
+                const trimmedValue = value.trim();
+
+                return trimmedValue.length === 0 ? null : trimmedValue;
+            },
+            validate: {
+                validator: function (value) {
+                    // Allow optional colour
+                    if (value === null || value === undefined) {
+                        return true;
+                    }
+         
+                    if (typeof value !== 'string') {
+                        return false;
+                    }
+
+                    // Accepts 3-char / 6-char hexcode, with required leading #
+                    return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(value);
+                },
+                message: 'Tag colour must be a valid hex colour'
+            }
         },
         category: {
             type: String,
-            enum: TAG_CATEGORIES,
+            enum: TAG_CATEGORY_VALUES,
             required: true
         }
     },
@@ -41,7 +71,7 @@ const tagSchema = new mongoose.Schema(
 );
 
 // Mongoose middleware validator
-tagSchema.pre('validate', function (next) {
+tagSchema.pre('validate', function () {
     /* Ensure that exactly one of userId or groupId is set */
     // Convert user + group vals into boolean
     const hasUser = !!this.userId;

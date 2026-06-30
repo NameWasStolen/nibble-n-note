@@ -1,5 +1,5 @@
 # API Routing Table
-Last Updated: 08/06/2026
+Last Updated: 20/06/2026
 
 ## Notes
 
@@ -50,9 +50,11 @@ Last Updated: 08/06/2026
 | Method | Route | Auth | Purpose | Parameters | Success Response | Notes | Implemented? |
 |----------|----------|----------|----------|----------|----------|----------|----------|
 | POST | `/api/restaurant-reviews` | Yes | Create restaurant review container | `locationId, groupId?, consensusRating, consensusSource, consensusUpdatedAt, consensusUpdatedBy, tagIds?` | `201 RestaurantReview` | Personal if no groupId | ☑ |
+| GET | `/api/restaurant-reviews` | Yes | List/search restaurant reviews | `groupId?, search?, tagIds?, sort?, page?, limit?` | `200 { restaurantReviews: RestaurantReview[], pagination: {...} }` | Personal reviews by default; group reviews if `groupId` is provided. Supports optional text search, tag filtering, sorting, and pagination. Access control required. | ☑ |
 | GET | `/api/restaurant-reviews/:id` | Yes | Get restaurant review | `id` | `200 RestaurantReview` | Access control required | ☑ |
 | PATCH | `/api/restaurant-reviews/:id` | Yes | Update review container | `consensusRating?, consensusSource, tagIds?` | `200 RestaurantReview` | Owner/Admin permissions | ☑ |
 | DELETE | `/api/restaurant-reviews/:id` | Yes | Delete review container | `id` | `204 No Content` | Decide cascade delete behaviour | ☑ |
+
 
 ---
 
@@ -91,10 +93,10 @@ Last Updated: 08/06/2026
 
 | Method | Route | Auth | Purpose | Parameters | Success Response | Notes | Implemented? |
 |----------|----------|----------|----------|----------|----------|----------|----------|
-| POST | `/api/tags` | Yes | Create tag | `groupId?, name, colour?, category` | `201 Tag` | Personal or group tag | [ ] |
-| GET | `/api/tags` | Yes | List tags | Query parameters | `200 Tag[]` | Filter by category/group | [ ] |
-| PATCH | `/api/tags/:id` | Yes | Update tag | `name?, colour?, category?` | `200 Tag` | Ownership required | [ ] |
-| DELETE | `/api/tags/:id` | Yes | Delete tag | `id` | `204 No Content` | Review references need consideration | [ ] |
+| POST | `/api/tags` | Yes | Create tag | `groupId?, name, colour?, category` | `201 Tag` | Personal or group tag. Only 1 of userId or groupId is defined, based on if the Tag belongs to the user or group | ☑ |
+| GET | `/api/tags` | Yes | List accessible tags | `category?, groupId?` | `200 { tags: Tag[] }` | No `groupId` returns current user’s personal tags. With `groupId`, returns group tags if the user is a group member. Optional `category` filters by `Restaurant` or `Dish`. | ☑ |
+| PATCH | `/api/tags/:id` | Yes | Update tag | `name?, colour?, category?` | `200 Tag` | Ownership required | ☑ |
+| DELETE | `/api/tags/:id` | Yes | Delete tag | `id` | `204 No Content` | Review references need consideration | ☑ |
 
 ---
 

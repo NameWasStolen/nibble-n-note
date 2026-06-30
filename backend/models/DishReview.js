@@ -54,7 +54,7 @@ const dishReviewSchema = new mongoose.Schema(
 );
 
 // Mongoose middleware validator
-dishReviewSchema.pre('validate', function (next) {
+dishReviewSchema.pre('validate', function () {
     /* Ensure exactly one of userId or groupId is set */
     // Convert user + group vals into boolean
     const hasUser = !!this.userId;
