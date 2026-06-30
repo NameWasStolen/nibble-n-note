@@ -54,7 +54,6 @@ Last Updated: 20/06/2026
 | GET | `/api/restaurant-reviews/:id` | Yes | Get restaurant review | `id` | `200 RestaurantReview` | Access control required | ☑ |
 | PATCH | `/api/restaurant-reviews/:id` | Yes | Update review container | `consensusRating?, consensusSource, tagIds?` | `200 RestaurantReview` | Owner/Admin permissions | ☑ |
 | DELETE | `/api/restaurant-reviews/:id` | Yes | Delete review container | `id` | `204 No Content` | Decide cascade delete behaviour | ☑ |
-| GET | `/api/restaurant-reviews/suggestions` | Yes | Get restaurant review search suggestions | `groupId?, search, limit?` | `200 { suggestions: ReviewSuggestion[] }` | Returns reviewed locations matching search text within personal scope by default, or group scope if `groupId` is provided. Access control required. | [ ] |
 
 
 ---
